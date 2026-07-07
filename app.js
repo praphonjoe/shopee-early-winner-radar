@@ -235,6 +235,25 @@ document.getElementById('addForm').addEventListener('submit', async (e)=>{
   renderHome(); openDetail(p.id);
 });
 
+/* ---------------- คนไทยค้นหาซื้ออะไร (Google Suggest) ---------------- */
+async function loadSearches(){
+  const el=document.getElementById('searches-list'), sub=document.getElementById('searches-sub');
+  if(!HAS_DB){ sub.textContent="ต้องต่อฐานข้อมูลก่อน"; return; }
+  el.innerHTML=`<p style="color:var(--ink-soft);padding:24px 6px;text-align:center">กำลังโหลด…</p>`;
+  try{
+    const {data,error}=await sb.from('searches').select('*').order('seed');
+    if(error) throw error;
+    if(!data||!data.length){ sub.textContent="ยังไม่มีข้อมูล (cron ดึงให้ทุกวัน)"; el.innerHTML=''; return; }
+    const groups={};
+    for(const r of data){ (groups[r.seed]=groups[r.seed]||[]).push(r.query); }
+    sub.textContent=`${data.length} คำค้นสินค้าที่คนไทยพิมพ์หาบ่อย · กดเพื่อไปหาใน Shopee`;
+    el.innerHTML=Object.keys(groups).map(seed=>{
+      const chips=groups[seed].map(q=>`<a href="https://shopee.co.th/search?keyword=${encodeURIComponent(q)}" target="_blank" rel="noopener">${q}<span class="sh">🛒</span></a>`).join('');
+      return `<div class="qgroup"><h3>🔎 ${seed}</h3><div class="qchips">${chips}</div></div>`;
+    }).join('');
+  }catch(e){ console.warn(e); sub.textContent="โหลดไม่ได้: "+e.message; el.innerHTML=''; }
+}
+
 /* ---------------- สินค้ามาแรงจาก YouTube ---------------- */
 function ytClean(t){
   let s=(t||'').split(/[—\|｜]/)[0];
@@ -327,6 +346,7 @@ function switchScreen(name){
   el.classList.add('active');
   if(name==='results'){ renderLiveSeg(); renderFilters(); renderList(); }
   if(name==='hot'){ loadHot(); }
+  if(name==='searches'){ loadSearches(); }
   if(name==='trends'){ loadTrends(); }
   document.getElementById('topback').style.display = name==='home' ? 'none' : 'flex';
   window.scrollTo({top:0,behavior:'instant'});
