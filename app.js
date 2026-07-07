@@ -208,7 +208,7 @@ function openDetail(id){
       <a href="https://www.lazada.co.th/catalog/?q=${encodeURIComponent(p.name)}" target="_blank" rel="noopener">🛍️ Lazada</a>
       <a href="https://www.tiktok.com/search?q=${encodeURIComponent(p.name)}" target="_blank" rel="noopener">▶️ TikTok</a>
     </div>
-    <button class="cta ghost" onclick="go('results')" style="margin-top:26px">← กลับไปดูอันดับ</button>`;
+    <button class="cta ghost" onclick="history.back()" style="margin-top:26px">← กลับไปดูอันดับ</button>`;
   go('detail');
 }
 
@@ -328,14 +328,21 @@ function toast(msg){
   const el=document.getElementById('toast'); el.textContent=msg; el.classList.add('show');
   clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove('show'),2600);
 }
-function go(name){
+function switchScreen(name){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-  document.getElementById('s-'+name).classList.add('active');
+  const el=document.getElementById('s-'+name); if(!el) return;
+  el.classList.add('active');
   if(name==='results'){ renderLiveSeg(); renderFilters(); renderList(); }
   if(name==='hot'){ loadHot(); }
   if(name==='trends'){ loadTrends(); }
+  document.getElementById('topback').style.display = name==='home' ? 'none' : 'flex';
   window.scrollTo({top:0,behavior:'instant'});
 }
+function go(name){
+  history.pushState({s:name},'');   // ให้ปุ่ม back ของมือถือย้อนได้
+  switchScreen(name);
+}
+window.addEventListener('popstate', e=>{ switchScreen((e.state && e.state.s) || 'home'); });
 window.go=go;
 
 /* ---------------- init ---------------- */

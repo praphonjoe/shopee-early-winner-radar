@@ -20,6 +20,8 @@
   .phone{width:100%;max-width:440px;min-height:100dvh;background:var(--ground);position:relative;overflow-x:hidden;display:flex;flex-direction:column;box-shadow:0 0 0 1px rgba(20,32,26,.04)}
   @media(min-width:520px){body{padding:26px 16px;align-items:flex-start}.phone{min-height:auto;border-radius:34px;overflow:hidden;box-shadow:0 30px 70px -30px rgba(20,32,26,.5);border:1px solid var(--line)}}
   .topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:16px 18px 12px;background:linear-gradient(var(--ground) 68%, rgba(245,243,236,0))}
+  .topback{display:none;align-items:center;justify-content:center;width:34px;height:34px;flex:none;margin-right:4px;background:var(--surface);border:1px solid var(--line);border-radius:10px;font-size:19px;font-weight:800;color:var(--ink);cursor:pointer;box-shadow:var(--shadow-sm);font-family:inherit}
+  .topback:active{transform:scale(.94)}
   .brand{display:flex;align-items:center;gap:9px}
   .radar{width:30px;height:30px;flex:none}
   .brand-name{font-weight:800;font-size:16px;letter-spacing:.2px}
@@ -166,6 +168,7 @@
 <body>
 <div class="phone">
   <div class="topbar">
+    <button class="topback" id="topback" onclick="history.back()" aria-label="ย้อนกลับ">←</button>
     <div class="brand">
       <svg class="radar" viewBox="0 0 30 30" fill="none" aria-hidden="true">
         <circle cx="15" cy="15" r="13" stroke="#0F9B6C" stroke-width="1.4" opacity=".35"/>
@@ -205,24 +208,24 @@
   </section>
 
   <section class="screen" id="s-hot">
-    <button class="back" onclick="go('home')">← กลับหน้าแรก</button>
+    <button class="back" onclick="history.back()">← กลับ</button>
     <div class="screen-head"><h2>สินค้ามาแรงจริงในไทย</h2><p id="hot-sub">กำลังโหลด…</p></div>
     <div id="hot-list"></div>
   </section>
 
   <section class="screen" id="s-trends">
-    <button class="back" onclick="go('home')">← กลับหน้าแรก</button>
+    <button class="back" onclick="history.back()">← กลับ</button>
     <div class="screen-head"><h2>เทรนด์สังคม/ข่าววันนี้</h2><p id="trends-sub">กำลังโหลด…</p></div>
     <div id="trends-list"></div>
   </section>
 
   <section class="screen" id="s-detail">
-    <button class="back" onclick="go('results')">← กลับไปดูอันดับ</button>
+    <button class="back" onclick="history.back()">← กลับ</button>
     <div id="detail"></div>
   </section>
 
   <section class="screen" id="s-add">
-    <button class="back" onclick="go('home')">← กลับหน้าแรก</button>
+    <button class="back" onclick="history.back()">← กลับ</button>
     <div class="screen-head"><h2>เพิ่มสินค้าของฉัน</h2><p>กรอกตัวเลขจาก Kalodata / Shopee แล้วกดให้คะแนน</p></div>
     <form id="addForm">
       <div class="field"><label>ชื่อสินค้า</label><input name="name" required placeholder="เช่น เครื่องนวดตาไฟฟ้าพกพา"></div>
