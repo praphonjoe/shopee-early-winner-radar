@@ -35,11 +35,16 @@ async function main() {
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) throw new Error("ขาด env SUPABASE_*");
   const day = new Date().toISOString().slice(0, 10);
   const seen = new Map();
+  const add = (q, score, seed) => { if (q && !seen.has(q)) seen.set(q, { query: q, day, seed, score }); };
   for (const seed of SEEDS) {
     try {
-      const list = await suggest(seed);
-      for (const it of list) if (!seen.has(it.query)) seen.set(it.query, { query: it.query, day, seed, score: it.score });
-      console.log(`  ${seed}: +${list.length}`);
+      const l1 = await suggest(seed);
+      for (const it of l1) add(it.query, it.score, seed);
+      // เจาะลึกอีกชั้นจาก top 3 → คำค้นเฉพาะเจาะจงขึ้น (แบรนด์/รุ่น)
+      for (const it of l1.slice(0, 3)) {
+        try { const l2 = await suggest(it.query); for (const j of l2) add(j.query, j.score, seed); } catch (e) {}
+      }
+      console.log(`  ${seed}: L1 ${l1.length}`);
     } catch (e) { console.warn(`  ${seed}: ${e.message}`); }
   }
   const rows = [...seen.values()];

@@ -254,27 +254,39 @@ async function loadSearches(){
     if(!data||!data.length){ sub.textContent="ยังไม่มีข้อมูล (cron ดึงให้ทุกวัน)"; el.innerHTML=''; return; }
     const days=[...new Set(data.map(r=>r.day))].sort();
     const latest=days[days.length-1], prev=days.length>1?days[days.length-2]:null;
+    const hasHist=days.length>=2;
     const map=new Map();
     for(const r of data){ if(!map.has(r.query)) map.set(r.query,{query:r.query,seed:r.seed,hist:[]}); map.get(r.query).hist.push({day:r.day,score:r.score}); }
-    const items=[...map.values()].map(o=>{
+    let items=[...map.values()].map(o=>{
       o.hist.sort((a,b)=>a.day<b.day?-1:1);
       const last=o.hist.find(h=>h.day===latest), p=prev?o.hist.find(h=>h.day===prev):null;
-      o.score=last?last.score:0; o.delta=(last&&p)?last.score-p.score:null;
+      o.score=last?last.score:0;
+      o.delta=(last&&p)?last.score-p.score:null;
+      o.isNew=!!(last&&prev&&!p);                 // โผล่วันนี้ ไม่มีเมื่อวาน = ค้นหาใหม่
       return o;
-    }).filter(o=>o.score>0).sort((a,b)=>b.score-a.score).slice(0,40);
+    }).filter(o=>o.score>0);
+    if(hasHist){                                   // มีประวัติ → เรียง "ตัวที่กำลังพุ่ง/ใหม่" ขึ้นก่อน (ก่อนกระแส)
+      items.sort((a,b)=>{ const da=a.isNew?1e9:(a.delta||0), db=b.isNew?1e9:(b.delta||0); return db!==da?db-da:b.score-a.score; });
+    }else{ items.sort((a,b)=>b.score-a.score); }
+    items=items.slice(0,40);
     if(!items.length){ sub.textContent="ยังไม่มีข้อมูลวันนี้"; el.innerHTML=''; return; }
-    const maxS=items[0].score;
-    sub.textContent=`${items.length} อันดับ · เรียงตามความนิยม (คะแนน Google) · แนวโน้มเก็บมา ${days.length} วัน`;
+    const maxS=Math.max(...items.map(o=>o.score));
+    sub.textContent=hasHist
+      ? `เรียงตาม "กำลังพุ่ง" (ก่อนกระแส) เทียบกับเมื่อวาน · ${items.length} อันดับ`
+      : `${items.length} อันดับความนิยม · ตัวที่ "กำลังพุ่ง" จะเริ่มโชว์พรุ่งนี้ (เก็บมา ${days.length} วัน)`;
     el.innerHTML=items.map((o,i)=>{
       const w=Math.max(6,Math.round(o.score/maxS*100));
       const q=encodeURIComponent(o.query);
       const spark=sparkline(o.hist.map(h=>h.score));
-      const delta=o.delta==null?'':(o.delta>0?`<span class="up">▲${o.delta}</span>`:o.delta<0?`<span class="down">▼${Math.abs(o.delta)}</span>`:`<span style="color:var(--grey)">— คงที่</span>`);
+      const badge=o.isNew?`<span class="up">🆕 ค้นหาใหม่</span>`
+        :(o.delta>0?`<span class="up">🚀 พุ่ง +${o.delta}</span>`
+        :o.delta<0?`<span class="down">▼${Math.abs(o.delta)}</span>`
+        :(o.delta===0?`<span style="color:var(--grey)">— คงที่</span>`:''));
       return `<div class="srow"><span class="srank">${i+1}</span>
         <div class="sbody">
           <div class="stitle"><span class="qn">${o.query}</span>${spark}</div>
           <div class="sbar"><i style="width:${w}%"></i></div>
-          <div class="smeta"><span>${o.seed} · ${o.score}</span>${delta}<a class="slink" href="https://shopee.co.th/search?keyword=${q}" target="_blank" rel="noopener">🛒 หาใน Shopee</a></div>
+          <div class="smeta"><span>${o.seed} · ${o.score}</span>${badge}<a class="slink" href="https://shopee.co.th/search?keyword=${q}" target="_blank" rel="noopener">🛒 หาใน Shopee</a></div>
         </div></div>`;
     }).join('');
   }catch(e){ console.warn(e); sub.textContent="โหลดไม่ได้: "+e.message; el.innerHTML=''; }
