@@ -160,11 +160,17 @@ function renderList(){
     if(p.shops>250) tags.push(`<span class="tag warn">⚔️ คู่แข่งเยอะ</span>`);
     if(p.trend<20) tags.push(`<span class="tag warn">📉 โมเมนตัมแผ่ว</span>`);
     const liveTag=`<span class="tag ${ls.tagCls}">${ls.chip}</span>`;
+    const q=encodeURIComponent(p.name);
+    const links=`<div class="tr-links" onclick="event.stopPropagation()">
+      <a class="shopee" href="https://shopee.co.th/search?keyword=${q}" target="_blank" rel="noopener">🛒 Shopee</a>
+      <a href="https://www.lazada.co.th/catalog/?q=${q}" target="_blank" rel="noopener">🛍️ Lazada</a>
+      <a href="https://www.tiktok.com/search?q=${q}" target="_blank" rel="noopener">▶️ TikTok</a>
+    </div>`;
     const isTop = FILTER==="all" && LIVE==="all" && i===0;
     return `${isTop?'<div class="toppick-tag">🏆 ตัวท็อปวันนี้ — โอกาสดีที่สุด</div>':''}
     <div class="card ${isTop?'hero-card':''}" data-id="${p.id}">
       <span class="rank">${rank}</span><div class="thumb">${p.emoji}</div>
-      <div class="card-body"><div class="card-name">${p.name}</div><div class="card-cat">${p.cat} · ฿${fmt(p.price)}</div><div class="tags">${liveTag}${tags.slice(0,2).join('')}</div></div>
+      <div class="card-body"><div class="card-name">${p.name}</div><div class="card-cat">${p.cat} · ฿${fmt(p.price)}</div><div class="tags">${liveTag}${tags.slice(0,2).join('')}</div>${links}</div>
       <div class="score-wrap"><div class="score-num ${t.cls}">${s.total}</div><div class="score-max">/ 100</div><span class="tierbadge ${t.cls}">${t.label}</span></div>
     </div>`;
   }).join('');
@@ -196,6 +202,12 @@ function openDetail(id){
     <div class="sec-label">ตัวเลขสำคัญ</div><div class="grid2">${stats}</div>
     <div class="sec-label">มุมคอนเทนต์แนะนำ</div>${ang}
     <div class="sec-label">ต้องระวัง</div>${rsk}
+    <div class="sec-label">ไปหาสินค้านี้ / สินค้าคล้ายกัน</div>
+    <div class="tr-links">
+      <a class="shopee" href="https://shopee.co.th/search?keyword=${encodeURIComponent(p.name)}" target="_blank" rel="noopener">🛒 หาใน Shopee</a>
+      <a href="https://www.lazada.co.th/catalog/?q=${encodeURIComponent(p.name)}" target="_blank" rel="noopener">🛍️ Lazada</a>
+      <a href="https://www.tiktok.com/search?q=${encodeURIComponent(p.name)}" target="_blank" rel="noopener">▶️ TikTok</a>
+    </div>
     <button class="cta ghost" onclick="go('results')" style="margin-top:26px">← กลับไปดูอันดับ</button>`;
   go('detail');
 }
