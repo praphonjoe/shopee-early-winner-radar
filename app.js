@@ -235,21 +235,47 @@ document.getElementById('addForm').addEventListener('submit', async (e)=>{
   renderHome(); openDetail(p.id);
 });
 
-/* ---------------- คนไทยค้นหาซื้ออะไร (Google Suggest) ---------------- */
+/* ---------------- คนไทยค้นหาซื้ออะไร — จัดอันดับ + กราฟแนวโน้ม ---------------- */
+function sparkline(scores){
+  const w=54,h=16;
+  if(!scores.length) return '';
+  if(scores.length===1) return `<svg class="spk" width="${w}" height="${h}"><circle cx="${w-4}" cy="${h/2}" r="2.5" fill="var(--emerald)"/></svg>`;
+  const max=Math.max(...scores),min=Math.min(...scores),rng=(max-min)||1;
+  const pts=scores.map((s,i)=>`${(i/(scores.length-1))*(w-4)+2},${(h-2-((s-min)/rng)*(h-4)).toFixed(1)}`).join(' ');
+  return `<svg class="spk" width="${w}" height="${h}"><polyline points="${pts}" fill="none" stroke="var(--emerald)" stroke-width="1.5"/></svg>`;
+}
 async function loadSearches(){
   const el=document.getElementById('searches-list'), sub=document.getElementById('searches-sub');
   if(!HAS_DB){ sub.textContent="ต้องต่อฐานข้อมูลก่อน"; return; }
   el.innerHTML=`<p style="color:var(--ink-soft);padding:24px 6px;text-align:center">กำลังโหลด…</p>`;
   try{
-    const {data,error}=await sb.from('searches').select('*').order('seed');
+    const {data,error}=await sb.from('search_daily').select('query,seed,score,day').order('day',{ascending:true}).limit(5000);
     if(error) throw error;
     if(!data||!data.length){ sub.textContent="ยังไม่มีข้อมูล (cron ดึงให้ทุกวัน)"; el.innerHTML=''; return; }
-    const groups={};
-    for(const r of data){ (groups[r.seed]=groups[r.seed]||[]).push(r.query); }
-    sub.textContent=`${data.length} คำค้นสินค้าที่คนไทยพิมพ์หาบ่อย · กดเพื่อไปหาใน Shopee`;
-    el.innerHTML=Object.keys(groups).map(seed=>{
-      const chips=groups[seed].map(q=>`<a href="https://shopee.co.th/search?keyword=${encodeURIComponent(q)}" target="_blank" rel="noopener">${q}<span class="sh">🛒</span></a>`).join('');
-      return `<div class="qgroup"><h3>🔎 ${seed}</h3><div class="qchips">${chips}</div></div>`;
+    const days=[...new Set(data.map(r=>r.day))].sort();
+    const latest=days[days.length-1], prev=days.length>1?days[days.length-2]:null;
+    const map=new Map();
+    for(const r of data){ if(!map.has(r.query)) map.set(r.query,{query:r.query,seed:r.seed,hist:[]}); map.get(r.query).hist.push({day:r.day,score:r.score}); }
+    const items=[...map.values()].map(o=>{
+      o.hist.sort((a,b)=>a.day<b.day?-1:1);
+      const last=o.hist.find(h=>h.day===latest), p=prev?o.hist.find(h=>h.day===prev):null;
+      o.score=last?last.score:0; o.delta=(last&&p)?last.score-p.score:null;
+      return o;
+    }).filter(o=>o.score>0).sort((a,b)=>b.score-a.score).slice(0,40);
+    if(!items.length){ sub.textContent="ยังไม่มีข้อมูลวันนี้"; el.innerHTML=''; return; }
+    const maxS=items[0].score;
+    sub.textContent=`${items.length} อันดับ · เรียงตามความนิยม (คะแนน Google) · แนวโน้มเก็บมา ${days.length} วัน`;
+    el.innerHTML=items.map((o,i)=>{
+      const w=Math.max(6,Math.round(o.score/maxS*100));
+      const q=encodeURIComponent(o.query);
+      const spark=sparkline(o.hist.map(h=>h.score));
+      const delta=o.delta==null?'':(o.delta>0?`<span class="up">▲${o.delta}</span>`:o.delta<0?`<span class="down">▼${Math.abs(o.delta)}</span>`:`<span style="color:var(--grey)">— คงที่</span>`);
+      return `<div class="srow"><span class="srank">${i+1}</span>
+        <div class="sbody">
+          <div class="stitle"><span class="qn">${o.query}</span>${spark}</div>
+          <div class="sbar"><i style="width:${w}%"></i></div>
+          <div class="smeta"><span>${o.seed} · ${o.score}</span>${delta}<a class="slink" href="https://shopee.co.th/search?keyword=${q}" target="_blank" rel="noopener">🛒 หาใน Shopee</a></div>
+        </div></div>`;
     }).join('');
   }catch(e){ console.warn(e); sub.textContent="โหลดไม่ได้: "+e.message; el.innerHTML=''; }
 }
