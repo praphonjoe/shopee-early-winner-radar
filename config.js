@@ -1,9 +1,8 @@
 /* ============================================================
-   Supabase config — ใส่ค่าจาก Supabase Dashboard → Project Settings → API
+   Supabase config — โปรเจกต์ shopee-early-winner
    anon key เปิดเผยได้ (ปลอดภัยด้วย Row Level Security)
-   ถ้ายังไม่ใส่ แอปจะทำงานด้วยข้อมูลตัวอย่าง (โหมดออฟไลน์) โดยอัตโนมัติ
    ============================================================ */
 window.__CONFIG__ = {
-  SUPABASE_URL: "",   // เช่น "https://abcdxyz.supabase.co"
-  SUPABASE_ANON_KEY: "" // เช่น "eyJhbGciOi..."
+  SUPABASE_URL: "https://zovdlmoycqpdvrdgzaqa.supabase.co",
+  SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpvdmRsbW95Y3FwZHZyZGd6YXFhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMzOTEzMDAsImV4cCI6MjA5ODk2NzMwMH0.abZmtNz1Q_1Ph9wJiPtTfv7nmAbItqXJmcipco_nTzU"
 };
