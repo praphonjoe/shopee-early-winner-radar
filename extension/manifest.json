@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "ก่อนกระแส · Shopee → Radar",
-  "version": "1.0.0",
-  "description": "คลิกเดียวดูดข้อมูลสินค้า Shopee (ยอดขาย/รีวิว/ราคา) เข้าแอปก่อนกระแส — ทำงานในเบราว์เซอร์คุณเอง ไม่โดนบล็อก",
+  "version": "2.0.0",
+  "description": "เก็บสินค้า Shopee ยกล็อตจากหน้าค้นหา/หมวด เข้าแอปก่อนกระแส แล้วให้แอปจัดอันดับ — ทำงานในเบราว์เซอร์คุณเอง ไม่โดนบล็อก",
   "host_permissions": [
     "https://shopee.co.th/*",
     "https://zovdlmoycqpdvrdgzaqa.supabase.co/*"
