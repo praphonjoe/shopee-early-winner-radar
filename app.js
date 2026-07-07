@@ -208,7 +208,7 @@ function openDetail(id){
       <a href="https://www.lazada.co.th/catalog/?q=${encodeURIComponent(p.name)}" target="_blank" rel="noopener">🛍️ Lazada</a>
       <a href="https://www.tiktok.com/search?q=${encodeURIComponent(p.name)}" target="_blank" rel="noopener">▶️ TikTok</a>
     </div>
-    <button class="cta ghost" onclick="history.back()" style="margin-top:26px">← กลับไปดูอันดับ</button>`;
+    <button class="cta ghost" onclick="goBack()" style="margin-top:26px">← กลับไปดูอันดับ</button>`;
   go('detail');
 }
 
@@ -328,6 +328,8 @@ function toast(msg){
   const el=document.getElementById('toast'); el.textContent=msg; el.classList.add('show');
   clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove('show'),2600);
 }
+let CURRENT='home';
+const navStack=[];
 function switchScreen(name){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   const el=document.getElementById('s-'+name); if(!el) return;
@@ -339,11 +341,16 @@ function switchScreen(name){
   window.scrollTo({top:0,behavior:'instant'});
 }
 function go(name){
-  history.pushState({s:name},'');   // ให้ปุ่ม back ของมือถือย้อนได้
-  switchScreen(name);
+  if(name!==CURRENT) navStack.push(CURRENT);
+  CURRENT=name; switchScreen(name);
+  try{ history.pushState({s:name},''); }catch(e){}   // เผื่อปุ่ม back มือถือใช้ได้
 }
-window.addEventListener('popstate', e=>{ switchScreen((e.state && e.state.s) || 'home'); });
-window.go=go;
+function goBack(){
+  const p=navStack.pop()||'home';
+  CURRENT=p; switchScreen(p);
+}
+window.addEventListener('popstate', ()=>{ if(CURRENT!=='home') goBack(); });
+window.go=go; window.goBack=goBack;
 
 /* ---------------- init ---------------- */
 (function(){

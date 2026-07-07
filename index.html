@@ -168,7 +168,7 @@
 <body>
 <div class="phone">
   <div class="topbar">
-    <button class="topback" id="topback" onclick="history.back()" aria-label="ย้อนกลับ">←</button>
+    <button class="topback" id="topback" onclick="goBack()" aria-label="ย้อนกลับ">←</button>
     <div class="brand">
       <svg class="radar" viewBox="0 0 30 30" fill="none" aria-hidden="true">
         <circle cx="15" cy="15" r="13" stroke="#0F9B6C" stroke-width="1.4" opacity=".35"/>
@@ -208,24 +208,24 @@
   </section>
 
   <section class="screen" id="s-hot">
-    <button class="back" onclick="history.back()">← กลับ</button>
+    <button class="back" onclick="goBack()">← กลับ</button>
     <div class="screen-head"><h2>สินค้ามาแรงจริงในไทย</h2><p id="hot-sub">กำลังโหลด…</p></div>
     <div id="hot-list"></div>
   </section>
 
   <section class="screen" id="s-trends">
-    <button class="back" onclick="history.back()">← กลับ</button>
+    <button class="back" onclick="goBack()">← กลับ</button>
     <div class="screen-head"><h2>เทรนด์สังคม/ข่าววันนี้</h2><p id="trends-sub">กำลังโหลด…</p></div>
     <div id="trends-list"></div>
   </section>
 
   <section class="screen" id="s-detail">
-    <button class="back" onclick="history.back()">← กลับ</button>
+    <button class="back" onclick="goBack()">← กลับ</button>
     <div id="detail"></div>
   </section>
 
   <section class="screen" id="s-add">
-    <button class="back" onclick="history.back()">← กลับ</button>
+    <button class="back" onclick="goBack()">← กลับ</button>
     <div class="screen-head"><h2>เพิ่มสินค้าของฉัน</h2><p>กรอกตัวเลขจาก Kalodata / Shopee แล้วกดให้คะแนน</p></div>
     <form id="addForm">
       <div class="field"><label>ชื่อสินค้า</label><input name="name" required placeholder="เช่น เครื่องนวดตาไฟฟ้าพกพา"></div>
