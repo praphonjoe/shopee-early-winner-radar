@@ -1,0 +1,21 @@
+name: Fetch Thai Trends
+
+# ดึงเทรนด์ไทยจาก Google Trends อัตโนมัติ → เก็บลง Supabase
+on:
+  schedule:
+    - cron: "0 */4 * * *"   # ทุก 4 ชั่วโมง
+  workflow_dispatch:          # กดรันเองได้จากแท็บ Actions
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Fetch & store trends
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: node scripts/fetch-trends.mjs

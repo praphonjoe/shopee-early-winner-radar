@@ -230,6 +230,43 @@ document.getElementById('addForm').addEventListener('submit', async (e)=>{
   renderHome(); openDetail(p.id);
 });
 
+/* ---------------- trends (เรดาร์เทรนด์ไทย) ---------------- */
+const ANGLE = {
+  "หวย / ดวง":        {ic:"🔮", prod:false, txt:"สายมู/เลขเด็ด — ทำคลิปตีความ หรือขายของมงคล/เครื่องรางที่เกี่ยว จับจังหวะก่อนหวยออก"},
+  "กีฬา":             {ic:"⚽", prod:false, txt:"คลิปวิเคราะห์/รีแอกชันหลังเกม, ขายเสื้อทีม/ของเชียร์ — ทำให้ทันช่วงกระแสร้อน"},
+  "การเมือง / ข่าว":  {ic:"⚠️", prod:false, txt:"หัวข้ออ่อนไหว — เน้นสรุปข่าว/ให้ข้อมูล ไม่ควรขายของตรงๆ ระวังดราม่า"},
+  "การเงิน":          {ic:"📈", prod:false, txt:"คอนเทนต์ให้ความรู้/เตือนภัย สร้างความน่าเชื่อถือ ต่อยอดเป็นที่ปรึกษา"},
+  "บันเทิง / ดารา":   {ic:"🎬", prod:false, txt:"รีแอกชัน/รีวิว, ตามสไตล์ดารา, ขายสินค้าที่คนดังใช้ — แรงช่วงกระแสพีค"},
+  "ไลฟ์สไตล์ / สินค้า":{ic:"🎯", prod:true,  txt:"โอกาสขายของ! หาสินค้าที่เกี่ยวมาทำรีวิว/คอนเทนต์เลย — นี่คือเทรนด์ที่ปั้นยอดขายได้"},
+  "กระแสสังคม":       {ic:"💡", prod:false, txt:"จับโมเมนต์ทำคอนเทนต์ให้ทัน — เล่นกับกระแสก่อนมันจาง คนกำลังสนใจสูงสุด"},
+};
+async function loadTrends(){
+  const el=document.getElementById('trends-list'), sub=document.getElementById('trends-sub');
+  if(!HAS_DB){ sub.textContent="ต้องต่อฐานข้อมูลก่อน"; return; }
+  el.innerHTML=`<p style="color:var(--ink-soft);padding:24px 6px;text-align:center">กำลังโหลดเทรนด์…</p>`;
+  try{
+    const {data,error}=await sb.from('trends').select('*').order('trend_date',{ascending:false}).order('volume',{ascending:false}).limit(20);
+    if(error) throw error;
+    if(!data||!data.length){ sub.textContent="ยังไม่มีข้อมูล (cron จะดึงให้อัตโนมัติ)"; el.innerHTML=''; return; }
+    const d=data[0].trend_date;
+    sub.textContent=`อัปเดตล่าสุด ${d} · เรียงตามยอดค้นหา · ${data.length} เทรนด์`;
+    el.innerHTML=data.map((t,i)=>{
+      const a=ANGLE[t.category]||ANGLE["กระแสสังคม"];
+      const vol=t.volume?`🔍 ${Number(t.volume).toLocaleString('en-US')}+`:'';
+      const news=t.news_title?`<div class="tr-news"><b>${t.news_source||''}:</b> ${t.news_title}</div>`:'';
+      return `<div class="trend">
+        <div class="tr-rank">${i+1}</div>
+        <div class="tr-body">
+          <div class="tr-top"><span class="tr-title">${t.title}</span>${vol?`<span class="tr-vol">${vol}</span>`:''}</div>
+          <span class="tr-cat ${a.prod?'prod':''}">${a.ic} ${t.category}</span>
+          ${news}
+          <div class="tr-angle ${a.prod?'prod':''}"><span>${a.ic}</span><span>${a.txt}</span></div>
+        </div>
+      </div>`;
+    }).join('');
+  }catch(e){ console.warn(e); sub.textContent="โหลดไม่ได้: "+e.message; el.innerHTML=''; }
+}
+
 /* ---------------- toast + nav ---------------- */
 let toastT;
 function toast(msg){
@@ -240,6 +277,7 @@ function go(name){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById('s-'+name).classList.add('active');
   if(name==='results'){ renderLiveSeg(); renderFilters(); renderList(); }
+  if(name==='trends'){ loadTrends(); }
   window.scrollTo({top:0,behavior:'instant'});
 }
 window.go=go;
