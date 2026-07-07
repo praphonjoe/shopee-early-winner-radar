@@ -72,6 +72,19 @@
   .tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
   .tag{font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:7px;background:#EEF4EA;color:var(--emerald-deep)}
   .tag.warn{background:#FBF0DE;color:#9A6B12}
+  .tag.live{background:#FCE4E0;color:#C0392B}
+  .tag.nolive{background:#E7F3E1;color:var(--emerald-deep)}
+  .liveseg{display:flex;gap:5px;background:#EAE8DF;border-radius:13px;padding:4px;margin:14px 0 2px}
+  .liveseg button{flex:1;cursor:pointer;font-family:inherit;font-size:12px;font-weight:750;padding:10px 4px;border:none;border-radius:10px;background:transparent;color:var(--ink-soft);transition:.15s;white-space:nowrap}
+  .liveseg button.on{background:var(--surface);color:var(--ink);box-shadow:var(--shadow-sm)}
+  .liveseg button.on[data-live="in"]{color:#C0392B}
+  .liveseg button.on[data-live="out"]{color:var(--emerald-deep)}
+  .livecard{display:flex;gap:12px;align-items:flex-start;margin:2px 0 4px;padding:14px 15px;border-radius:16px;font-size:13px;line-height:1.5}
+  .livecard .lic{font-size:22px;flex:none;line-height:1.2}
+  .livecard b{display:block;margin-bottom:2px;font-size:14.5px}
+  .livecard.none{background:#EDF6E7;border:1px solid #CDE7C1;color:#2F5A3E}
+  .livecard.low{background:#FBF1E2;border:1px solid #F0DCBC;color:#8A5A18}
+  .livecard.high{background:#FBE9E3;border:1px solid #F3D0C6;color:#AF442C}
   .score-wrap{flex:none;text-align:center;width:56px}
   .score-num{font-size:27px;font-weight:850;line-height:1;letter-spacing:-1px;font-variant-numeric:tabular-nums}
   .score-max{font-size:10px;color:var(--grey);font-weight:600}
@@ -160,6 +173,7 @@
 
   <section class="screen" id="s-results">
     <div class="screen-head"><h2>อันดับสินค้าก่อนกระแส</h2><p>เรียงจากคะแนนสูงสุด — ตัวบนสุดคือโอกาสดีที่สุดวันนี้</p></div>
+    <div class="liveseg" id="liveseg"></div>
     <div class="filters" id="filters"></div>
     <div id="list"></div>
   </section>
@@ -184,6 +198,7 @@
       <div class="two"><div class="field"><label>ยอดขาย 7 วัน <span class="hint">ชิ้น</span></label><input name="sales" type="number" min="0" required placeholder="420"></div><div class="field"><label>โตจากสัปดาห์ก่อน <span class="hint">%</span></label><input name="trend" type="number" required placeholder="145"></div></div>
       <div class="two"><div class="field"><label>จำนวนครีเอเตอร์ <span class="hint">ที่ทำคลิป</span></label><input name="creators" type="number" min="0" required placeholder="12"></div><div class="field"><label>จำนวนร้านที่ขาย</label><input name="shops" type="number" min="0" required placeholder="34"></div></div>
       <div class="two"><div class="field"><label>จำนวนรีวิว</label><input name="reviews" type="number" min="0" required placeholder="210"></div><div class="field"><label>เรทติ้ง <span class="hint">0–5</span></label><input name="rating" type="number" step="0.1" min="0" max="5" required placeholder="4.7"></div></div>
+      <div class="field"><label>สัดส่วนยอดขายจาก Live <span class="hint">% · 0 = ยังไม่มีใน Live</span></label><input name="live" type="number" min="0" max="100" value="0" placeholder="0"></div>
       <div class="sec-label" style="margin-top:8px">ทำคอนเทนต์ปังง่ายแค่ไหน?</div>
       <div class="flags" id="flags">
         <label class="flag"><input type="checkbox" name="wow"><span class="box">✓</span> มีจุด “ว้าว”</label>
