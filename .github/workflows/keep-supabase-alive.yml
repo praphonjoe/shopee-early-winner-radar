@@ -1,0 +1,33 @@
+name: Keep Supabase Alive
+
+# กัน Supabase ฟรีทีเออร์ pause (หลับหลังไม่มีการเชื่อมต่อ 7 วัน)
+# วิ่งทุก 3 วัน แตะฐานข้อมูลจริง 1 ครั้ง → โปรเจกต์ไม่มีวันหลับ
+on:
+  schedule:
+    - cron: "0 6 */3 * *"   # ทุก 3 วัน เวลา 06:00 UTC (13:00 ไทย)
+  workflow_dispatch:          # กดรันเองได้จากแท็บ Actions
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase REST API
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_ANON_KEY" ]; then
+            echo "⚠️  ยังไม่ได้ตั้งค่า secret SUPABASE_URL / SUPABASE_ANON_KEY — ข้าม"
+            exit 0
+          fi
+          CODE=$(curl -sS -o /dev/null -w "%{http_code}" \
+            "$SUPABASE_URL/rest/v1/products?select=id&limit=1" \
+            -H "apikey: $SUPABASE_ANON_KEY" \
+            -H "Authorization: Bearer $SUPABASE_ANON_KEY")
+          echo "Supabase ตอบกลับ HTTP $CODE"
+          if [ "$CODE" -ge 200 ] && [ "$CODE" -lt 400 ]; then
+            echo "✅ ฐานข้อมูลยังทำงานปกติ"
+          else
+            echo "❌ ได้ HTTP $CODE — ตรวจสอบ URL/key หรือดูว่าโปรเจกต์ถูก pause หรือยัง"
+            exit 1
+          fi
