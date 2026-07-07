@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ก่อนกระแส · Early Winner Radar</title>
+<meta name="description" content="แอปหาสินค้าก่อนกระแสสำหรับ Shopee / TikTok Shop — จัดอันดับ ให้คะแนน แนะนำคอนเทนต์">
+<meta name="theme-color" content="#F5F3EC">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3E%3Ccircle cx='15' cy='15' r='13' fill='none' stroke='%230F9B6C' stroke-width='1.6'/%3E%3Cpath d='M15 15 L15 3 A12 12 0 0 1 25 10 Z' fill='%23C6F24E'/%3E%3Ccircle cx='15' cy='15' r='2.6' fill='%230F9B6C'/%3E%3C/svg%3E">
+<style>
+  :root{
+    --ground:#F5F3EC; --ink:#14201A; --ink-soft:#5B6A61; --line:#E3E0D6; --surface:#FFFFFF;
+    --emerald:#0F9B6C; --emerald-deep:#0A5A42; --lime:#C6F24E; --teal:#1E8FA8; --amber:#E9A226; --red:#DB5B3C; --grey:#9AA39C;
+    --shadow:0 10px 30px -12px rgba(20,32,26,.28); --shadow-sm:0 4px 14px -8px rgba(20,32,26,.30);
+    --r:20px; --sans:-apple-system,"SF Pro Text","Sukhumvit Set","Helvetica Neue",system-ui,"Segoe UI",Roboto,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{font-family:var(--sans);color:var(--ink);background:radial-gradient(120% 60% at 50% -10%, #E9F3D9 0%, rgba(233,243,217,0) 55%),var(--ground);-webkit-font-smoothing:antialiased;display:flex;justify-content:center;min-height:100dvh}
+  .phone{width:100%;max-width:440px;min-height:100dvh;background:var(--ground);position:relative;overflow-x:hidden;display:flex;flex-direction:column;box-shadow:0 0 0 1px rgba(20,32,26,.04)}
+  @media(min-width:520px){body{padding:26px 16px;align-items:flex-start}.phone{min-height:auto;border-radius:34px;overflow:hidden;box-shadow:0 30px 70px -30px rgba(20,32,26,.5);border:1px solid var(--line)}}
+  .topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:16px 18px 12px;background:linear-gradient(var(--ground) 68%, rgba(245,243,236,0))}
+  .brand{display:flex;align-items:center;gap:9px}
+  .radar{width:30px;height:30px;flex:none}
+  .brand-name{font-weight:800;font-size:16px;letter-spacing:.2px}
+  .brand-sub{font-size:10.5px;color:var(--ink-soft);letter-spacing:.4px;margin-top:1px}
+  .pill-date{font-size:11px;font-weight:600;color:var(--emerald-deep);background:#E4F1DF;border:1px solid #CFE6C4;border-radius:999px;padding:5px 11px;white-space:nowrap}
+  .screen{display:none;padding:4px 18px 40px;flex:1}
+  .screen.active{display:block;animation:rise .38s cubic-bezier(.2,.7,.2,1)}
+  @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+  @media(prefers-reduced-motion:reduce){.screen.active{animation:none}}
+  .hero{padding:22px 4px 6px}
+  .kicker{display:inline-flex;align-items:center;gap:7px;font-size:11.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--emerald-deep);background:#E4F1DF;border-radius:999px;padding:6px 12px}
+  .dot-live{width:7px;height:7px;border-radius:50%;background:var(--emerald);position:relative}
+  .dot-live::after{content:"";position:absolute;inset:-4px;border-radius:50%;background:var(--emerald);opacity:.35;animation:pulse 1.8s ease-out infinite}
+  @keyframes pulse{0%{transform:scale(.6);opacity:.5}100%{transform:scale(2.4);opacity:0}}
+  @media(prefers-reduced-motion:reduce){.dot-live::after{animation:none}}
+  h1.title{font-size:34px;line-height:1.12;font-weight:850;letter-spacing:-.5px;margin:18px 0 12px;text-wrap:balance}
+  h1.title .hl{color:var(--emerald);position:relative;white-space:nowrap}
+  h1.title .hl::after{content:"";position:absolute;left:0;right:0;bottom:2px;height:8px;background:var(--lime);opacity:.55;z-index:-1;border-radius:3px}
+  .lead{color:var(--ink-soft);font-size:15px;line-height:1.6;max-width:34ch}
+  .cta{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;border:none;cursor:pointer;background:var(--ink);color:#F4FBEF;font-family:inherit;font-size:17px;font-weight:800;padding:18px;border-radius:16px;margin-top:26px;box-shadow:var(--shadow);transition:transform .12s ease}
+  .cta:active{transform:translateY(2px) scale(.99)}
+  .cta .arrow{font-size:19px;transition:transform .2s}
+  .cta:hover .arrow{transform:translateX(3px)}
+  .cta.ghost{background:var(--surface);color:var(--ink);border:1.5px solid var(--line);box-shadow:var(--shadow-sm);font-size:15px;padding:15px;margin-top:12px}
+  .cta[disabled]{opacity:.55;cursor:default}
+  .home-stats{display:flex;gap:10px;margin-top:26px}
+  .hstat{flex:1;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:13px 14px}
+  .hstat .n{font-size:22px;font-weight:850;letter-spacing:-.5px;line-height:1}
+  .hstat .l{font-size:11px;color:var(--ink-soft);margin-top:5px;line-height:1.3}
+  .hstat .n.go{color:var(--emerald)}
+  .note{display:flex;gap:10px;margin-top:24px;padding:13px 14px;background:#FBF6E6;border:1px solid #F0E3BE;border-radius:14px;font-size:12.5px;color:#7A6A3C;line-height:1.55}
+  .note b{color:#5E5220}
+  .note.live{background:#E7F3E1;border-color:#CFE6C4;color:#3C5A3E}.note.live b{color:var(--emerald-deep)}
+  .screen-head{padding:14px 4px 6px}
+  .screen-head h2{font-size:23px;font-weight:850;letter-spacing:-.3px}
+  .screen-head p{color:var(--ink-soft);font-size:13.5px;margin-top:4px}
+  .filters{display:flex;gap:8px;overflow-x:auto;padding:14px 4px 6px;margin:0 -4px;scrollbar-width:none}
+  .filters::-webkit-scrollbar{display:none}
+  .chip{flex:none;cursor:pointer;font-family:inherit;font-size:13px;font-weight:700;padding:8px 14px;border-radius:999px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink-soft);white-space:nowrap;transition:.15s}
+  .chip.on{background:var(--ink);color:#F4FBEF;border-color:var(--ink)}
+  .toppick-tag{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:800;color:var(--emerald-deep);letter-spacing:.3px;margin:14px 0 8px;padding-left:2px}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:15px;margin-bottom:12px;cursor:pointer;position:relative;box-shadow:var(--shadow-sm);transition:transform .12s ease;display:flex;gap:13px;align-items:center}
+  .card:active{transform:scale(.985)}
+  .card.hero-card{border-color:#BFE3B4;background:linear-gradient(180deg,#F4FBEE,#FFFFFF);box-shadow:var(--shadow)}
+  .thumb{width:52px;height:52px;flex:none;border-radius:14px;display:grid;place-items:center;font-size:26px;background:#EEF4EA;border:1px solid var(--line)}
+  .rank{position:absolute;top:-7px;left:-7px;width:24px;height:24px;border-radius:50%;background:var(--ink);color:#F4FBEF;font-size:12px;font-weight:800;display:grid;place-items:center;box-shadow:var(--shadow-sm);z-index:2}
+  .card-body{flex:1;min-width:0}
+  .card-name{font-size:15px;font-weight:750;line-height:1.25;letter-spacing:-.2px}
+  .card-cat{font-size:11.5px;color:var(--grey);margin-top:2px}
+  .tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+  .tag{font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:7px;background:#EEF4EA;color:var(--emerald-deep)}
+  .tag.warn{background:#FBF0DE;color:#9A6B12}
+  .score-wrap{flex:none;text-align:center;width:56px}
+  .score-num{font-size:27px;font-weight:850;line-height:1;letter-spacing:-1px;font-variant-numeric:tabular-nums}
+  .score-max{font-size:10px;color:var(--grey);font-weight:600}
+  .tierbadge{display:inline-block;font-size:10px;font-weight:800;padding:2px 7px;border-radius:6px;margin-top:6px;white-space:nowrap}
+  .t-go{background:#DFF3D6;color:var(--emerald-deep)} .score-num.t-go{color:var(--emerald)}
+  .t-watch{background:#DBEEF3;color:#0E5D70} .score-num.t-watch{color:var(--teal)}
+  .t-mid{background:#FBEFD6;color:#8A6412} .score-num.t-mid{color:var(--amber)}
+  .t-skip{background:#EDEDE9;color:#767B74} .score-num.t-skip{color:var(--grey)}
+  .back{display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-family:inherit;font-size:14px;font-weight:700;color:var(--ink-soft);background:none;border:none;padding:8px 2px;margin-bottom:4px}
+  .d-head{display:flex;gap:14px;align-items:center;margin:6px 0 4px}
+  .d-thumb{width:60px;height:60px;flex:none;border-radius:16px;display:grid;place-items:center;font-size:30px;background:#EEF4EA;border:1px solid var(--line)}
+  .d-name{font-size:20px;font-weight:820;line-height:1.2;letter-spacing:-.3px}
+  .d-cat{font-size:12.5px;color:var(--grey);margin-top:3px}
+  .verdict{display:flex;gap:14px;align-items:center;margin:16px 0;padding:16px;border-radius:18px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-sm)}
+  .ring{width:72px;height:72px;flex:none;border-radius:50%;display:grid;place-items:center;position:relative}
+  .ring::before{content:"";position:absolute;inset:8px;background:var(--surface);border-radius:50%}
+  .ring .rv{position:relative;font-size:23px;font-weight:850;letter-spacing:-1px;font-variant-numeric:tabular-nums}
+  .verdict-txt .vt{font-size:16px;font-weight:820}
+  .verdict-txt .vd{font-size:13px;color:var(--ink-soft);line-height:1.5;margin-top:3px}
+  .sec-label{font-size:12px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--ink-soft);margin:22px 0 11px;padding-left:2px}
+  .dims{display:flex;flex-direction:column;gap:13px}
+  .dim{display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:center}
+  .dim-name{font-size:13.5px;font-weight:650}
+  .dim-val{font-size:12.5px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--ink-soft)}
+  .bar{grid-column:1/-1;height:8px;border-radius:999px;background:#EAE8DF;overflow:hidden}
+  .bar > i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,var(--emerald),var(--lime));transition:width .6s cubic-bezier(.2,.7,.2,1)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .stat{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 13px}
+  .stat .sl{font-size:11px;color:var(--ink-soft);font-weight:600}
+  .stat .sv{font-size:17px;font-weight:820;margin-top:3px;letter-spacing:-.3px;font-variant-numeric:tabular-nums}
+  .stat .sv small{font-size:11px;color:var(--grey);font-weight:600}
+  .up{color:var(--emerald)} .down{color:var(--red)}
+  .list-item{display:flex;gap:11px;padding:12px 0;border-bottom:1px solid var(--line);font-size:14px;line-height:1.5}
+  .list-item:last-child{border-bottom:none}
+  .li-ic{flex:none;width:26px;height:26px;border-radius:8px;display:grid;place-items:center;font-size:14px}
+  .li-ic.a{background:#E7F3E1;color:var(--emerald-deep)}
+  .li-ic.r{background:#FBE7DF;color:#B7462A}
+  .field{margin-bottom:15px}
+  .field label{display:block;font-size:13px;font-weight:700;margin-bottom:7px}
+  .field .hint{font-weight:500;color:var(--grey);font-size:11.5px}
+  .field input,.field select{width:100%;font-family:inherit;font-size:15px;color:var(--ink);background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:13px 14px;transition:border-color .15s}
+  .field input:focus,.field select:focus{outline:none;border-color:var(--emerald)}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+  .flags{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+  .flag{display:flex;align-items:center;gap:9px;cursor:pointer;user-select:none;border:1.5px solid var(--line);border-radius:12px;padding:12px;font-size:13px;font-weight:650;background:var(--surface);transition:.15s}
+  .flag input{display:none}
+  .flag .box{width:20px;height:20px;flex:none;border-radius:6px;border:1.5px solid var(--line);display:grid;place-items:center;font-size:12px;color:transparent;transition:.15s}
+  .flag.checked{border-color:var(--emerald);background:#F3FAEE}
+  .flag.checked .box{background:var(--emerald);border-color:var(--emerald);color:#fff}
+  .toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#F4FBEF;font-size:13.5px;font-weight:700;padding:12px 20px;border-radius:12px;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:.3s;z-index:50}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  :focus-visible{outline:2.5px solid var(--emerald);outline-offset:2px;border-radius:6px}
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="topbar">
+    <div class="brand">
+      <svg class="radar" viewBox="0 0 30 30" fill="none" aria-hidden="true">
+        <circle cx="15" cy="15" r="13" stroke="#0F9B6C" stroke-width="1.4" opacity=".35"/>
+        <circle cx="15" cy="15" r="8" stroke="#0F9B6C" stroke-width="1.4" opacity=".5"/>
+        <circle cx="15" cy="15" r="2.4" fill="#0F9B6C"/>
+        <path d="M15 15 L15 3 A12 12 0 0 1 25 10 Z" fill="#C6F24E" opacity=".85"/>
+        <circle cx="22" cy="8" r="2.1" fill="#14201A"/>
+      </svg>
+      <div><div class="brand-name">ก่อนกระแส</div><div class="brand-sub">EARLY&nbsp;WINNER&nbsp;RADAR</div></div>
+    </div>
+    <div class="pill-date" id="today">—</div>
+  </div>
+
+  <section class="screen active" id="s-home">
+    <div class="hero">
+      <span class="kicker"><span class="dot-live"></span> เรดาร์กำลังสแกน</span>
+      <h1 class="title">วันนี้ทำ<br><span class="hl">สินค้าอะไรดี?</span></h1>
+      <p class="lead">จับสินค้า “ก่อนกระแส” ที่กำลังจะปัง — ยอดโต คนทำยังน้อย ทำคอนเทนต์ง่ายไม่แบน กดปุ่มเดียวจัดอันดับให้เลย</p>
+      <button class="cta" onclick="go('results')">🎯 หาสินค้าให้หน่อย <span class="arrow">→</span></button>
+      <button class="cta ghost" onclick="go('add')">➕ เพิ่มสินค้าของฉันเอง</button>
+      <div class="home-stats">
+        <div class="hstat"><div class="n" id="stat-total">—</div><div class="l">สินค้าในเรดาร์</div></div>
+        <div class="hstat"><div class="n go" id="stat-go">—</div><div class="l">น่าลุยวันนี้</div></div>
+        <div class="hstat"><div class="n" id="stat-top">—</div><div class="l">คะแนนตัวท็อป</div></div>
+      </div>
+      <div class="note" id="dataNote"><span>💡</span><div id="dataNoteTxt">กำลังเชื่อมต่อฐานข้อมูล…</div></div>
+    </div>
+  </section>
+
+  <section class="screen" id="s-results">
+    <div class="screen-head"><h2>อันดับสินค้าก่อนกระแส</h2><p>เรียงจากคะแนนสูงสุด — ตัวบนสุดคือโอกาสดีที่สุดวันนี้</p></div>
+    <div class="filters" id="filters"></div>
+    <div id="list"></div>
+  </section>
+
+  <section class="screen" id="s-detail">
+    <button class="back" onclick="go('results')">← กลับไปดูอันดับ</button>
+    <div id="detail"></div>
+  </section>
+
+  <section class="screen" id="s-add">
+    <button class="back" onclick="go('home')">← กลับหน้าแรก</button>
+    <div class="screen-head"><h2>เพิ่มสินค้าของฉัน</h2><p>กรอกตัวเลขจาก Kalodata / Shopee แล้วกดให้คะแนน</p></div>
+    <form id="addForm">
+      <div class="field"><label>ชื่อสินค้า</label><input name="name" required placeholder="เช่น เครื่องนวดตาไฟฟ้าพกพา"></div>
+      <div class="two">
+        <div class="field"><label>หมวดหมู่</label>
+          <select name="cat"><option>ความงาม</option><option>สุขภาพ</option><option>แกดเจ็ต</option><option>ของใช้ในบ้าน</option><option>ครัว</option><option>แม่และเด็ก</option><option>สัตว์เลี้ยง</option><option>แฟชั่น</option><option>อื่น ๆ</option></select>
+        </div>
+        <div class="field"><label>อีโมจิ <span class="hint">ไอคอน</span></label><input name="emoji" maxlength="2" placeholder="🛍️" value="🛍️"></div>
+      </div>
+      <div class="two"><div class="field"><label>ราคาขาย <span class="hint">฿</span></label><input name="price" type="number" min="0" required placeholder="390"></div><div class="field"><label>ต้นทุน <span class="hint">฿</span></label><input name="cost" type="number" min="0" required placeholder="150"></div></div>
+      <div class="two"><div class="field"><label>ยอดขาย 7 วัน <span class="hint">ชิ้น</span></label><input name="sales" type="number" min="0" required placeholder="420"></div><div class="field"><label>โตจากสัปดาห์ก่อน <span class="hint">%</span></label><input name="trend" type="number" required placeholder="145"></div></div>
+      <div class="two"><div class="field"><label>จำนวนครีเอเตอร์ <span class="hint">ที่ทำคลิป</span></label><input name="creators" type="number" min="0" required placeholder="12"></div><div class="field"><label>จำนวนร้านที่ขาย</label><input name="shops" type="number" min="0" required placeholder="34"></div></div>
+      <div class="two"><div class="field"><label>จำนวนรีวิว</label><input name="reviews" type="number" min="0" required placeholder="210"></div><div class="field"><label>เรทติ้ง <span class="hint">0–5</span></label><input name="rating" type="number" step="0.1" min="0" max="5" required placeholder="4.7"></div></div>
+      <div class="sec-label" style="margin-top:8px">ทำคอนเทนต์ปังง่ายแค่ไหน?</div>
+      <div class="flags" id="flags">
+        <label class="flag"><input type="checkbox" name="wow"><span class="box">✓</span> มีจุด “ว้าว”</label>
+        <label class="flag"><input type="checkbox" name="demo"><span class="box">✓</span> โชว์การใช้งานได้</label>
+        <label class="flag"><input type="checkbox" name="problem"><span class="box">✓</span> แก้ปัญหาชัด</label>
+        <label class="flag"><input type="checkbox" name="easy"><span class="box">✓</span> ถ่ายง่าย ไม่ต้องเซ็ต</label>
+      </div>
+      <button class="cta" type="submit" id="addBtn" style="margin-top:22px">⚡ ให้คะแนน &amp; บันทึก</button>
+    </form>
+  </section>
+</div>
+<div class="toast" id="toast"></div>
+
+<script src="config.js"></script>
+<script type="module" src="app.js"></script>
+</body>
+</html>

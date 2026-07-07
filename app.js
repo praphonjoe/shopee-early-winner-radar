@@ -1,0 +1,233 @@
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+/* ---------------- Supabase ---------------- */
+const CFG = window.__CONFIG__ || {};
+const HAS_DB = !!(CFG.SUPABASE_URL && CFG.SUPABASE_ANON_KEY);
+const sb = HAS_DB ? createClient(CFG.SUPABASE_URL, CFG.SUPABASE_ANON_KEY) : null;
+
+/* ---------------- seed (ใช้เมื่อยังไม่ต่อ DB หรือตารางว่าง) ---------------- */
+const SEED = [
+  {id:"s1", emoji:"👁️", name:"เครื่องนวดตาไฟฟ้าพกพา", cat:"สุขภาพ", price:390, cost:150, sales:420, trend:145, creators:12, shops:34, reviews:210, rating:4.7, days:22, f:{wow:1,demo:1,problem:1,easy:1}},
+  {id:"s2", emoji:"👃", name:"ที่ดูดน้ำมูกเด็กไฟฟ้า", cat:"แม่และเด็ก", price:290, cost:95, sales:260, trend:95, creators:20, shops:45, reviews:130, rating:4.8, days:18, f:{wow:0,demo:1,problem:1,easy:1}},
+  {id:"s3", emoji:"🌇", name:"โคมไฟพระอาทิตย์ตั้งโต๊ะ", cat:"ของใช้ในบ้าน", price:220, cost:70, sales:800, trend:20, creators:480, shops:520, reviews:2100, rating:4.6, days:120, f:{wow:1,demo:1,problem:0,easy:1}},
+  {id:"s4", emoji:"🪥", name:"แปรงสีฟันไฟฟ้าเด็กลายการ์ตูน", cat:"สุขภาพ", price:180, cost:60, sales:150, trend:60, creators:40, shops:90, reviews:85, rating:4.7, days:30, f:{wow:0,demo:1,problem:1,easy:1}},
+  {id:"s5", emoji:"🧼", name:"เครื่องตีโฟมล้างหน้าอัตโนมัติ", cat:"ความงาม", price:260, cost:80, sales:340, trend:110, creators:28, shops:60, reviews:160, rating:4.6, days:20, f:{wow:1,demo:1,problem:0,easy:1}},
+  {id:"s6", emoji:"🔌", name:"คลิปหนีบสายไฟแม่เหล็กติดโต๊ะ", cat:"แกดเจ็ต", price:120, cost:35, sales:90, trend:25, creators:60, shops:140, reviews:70, rating:4.5, days:40, f:{wow:0,demo:1,problem:0,easy:1}},
+  {id:"s7", emoji:"💆", name:"หวีนวดหนังศีรษะไฟฟ้า", cat:"ความงาม", price:350, cost:120, sales:300, trend:130, creators:18, shops:40, reviews:140, rating:4.7, days:16, f:{wow:1,demo:1,problem:1,easy:1}},
+  {id:"s8", emoji:"🍶", name:"กระบอกน้ำมีจอวัดอุณหภูมิ LED", cat:"แกดเจ็ต", price:320, cost:110, sales:500, trend:40, creators:220, shops:300, reviews:900, rating:4.6, days:80, f:{wow:1,demo:0,problem:0,easy:1}},
+  {id:"s9", emoji:"🦟", name:"เครื่องดักยุงไฟฟ้า USB เงียบ", cat:"ของใช้ในบ้าน", price:450, cost:160, sales:380, trend:150, creators:25, shops:55, reviews:175, rating:4.5, days:20, f:{wow:1,demo:1,problem:1,easy:1}},
+  {id:"s10", emoji:"👀", name:"แผ่นแปะลดบวมใต้ตา (30 คู่)", cat:"ความงาม", price:150, cost:45, sales:260, trend:55, creators:90, shops:180, reviews:400, rating:4.4, days:50, f:{wow:0,demo:1,problem:1,easy:1}},
+  {id:"s11", emoji:"🥤", name:"เครื่องปั่นพกพาไร้สาย", cat:"ครัว", price:480, cost:180, sales:210, trend:35, creators:350, shops:400, reviews:1500, rating:4.5, days:150, f:{wow:1,demo:1,problem:0,easy:1}},
+  {id:"s12", emoji:"🐾", name:"ที่กรอเล็บสุนัขไฟฟ้าเงียบ", cat:"สัตว์เลี้ยง", price:340, cost:110, sales:180, trend:120, creators:15, shops:30, reviews:95, rating:4.7, days:17, f:{wow:0,demo:1,problem:1,easy:1}},
+];
+let P = SEED.slice();
+
+/* map a Supabase row -> internal product shape */
+function fromRow(r){
+  return {id:r.id, emoji:r.emoji||"🛍️", name:r.name, cat:r.cat, price:+r.price, cost:+r.cost,
+    sales:+r.sales, trend:+r.trend, creators:+r.creators, shops:+r.shops, reviews:+r.reviews,
+    rating:+r.rating, days:+r.days||0, f:{wow:r.f_wow?1:0, demo:r.f_demo?1:0, problem:r.f_problem?1:0, easy:r.f_easy?1:0}};
+}
+function toRow(p){
+  return {emoji:p.emoji, name:p.name, cat:p.cat, price:p.price, cost:p.cost, sales:p.sales, trend:p.trend,
+    creators:p.creators, shops:p.shops, reviews:p.reviews, rating:p.rating, days:p.days,
+    f_wow:!!p.f.wow, f_demo:!!p.f.demo, f_problem:!!p.f.problem, f_easy:!!p.f.easy};
+}
+
+async function loadData(){
+  if(!HAS_DB){ setDataNote(false, "offline"); return; }
+  try{
+    const {data, error} = await sb.from("products").select("*").order("created_at",{ascending:true});
+    if(error) throw error;
+    if(data && data.length){ P = data.map(fromRow); setDataNote(true, "live"); }
+    else { P = SEED.slice(); setDataNote(true, "empty"); }
+  }catch(e){
+    console.warn("Supabase load failed, ใช้ข้อมูลตัวอย่างแทน:", e.message);
+    P = SEED.slice(); setDataNote(false, "error");
+  }
+  renderHome();
+}
+function setDataNote(live, mode){
+  const note=document.getElementById("dataNote"), txt=document.getElementById("dataNoteTxt");
+  if(live && mode==="live"){ note.classList.add("live"); txt.innerHTML='☁️ <b>เชื่อมต่อฐานข้อมูลแล้ว</b> — สินค้าที่เพิ่มจะถูกบันทึกถาวร ใช้ได้ทุกเครื่อง'; }
+  else if(live && mode==="empty"){ note.classList.add("live"); txt.innerHTML='☁️ <b>ฐานข้อมูลพร้อม (ยังว่างอยู่)</b> — ตอนนี้โชว์ข้อมูลตัวอย่าง ลองกด “เพิ่มสินค้าของฉัน” เพื่อเริ่มบันทึกจริง'; }
+  else { txt.innerHTML='💡 ตอนนี้ใช้ <b>ข้อมูลตัวอย่าง</b> (ยังไม่ได้ต่อฐานข้อมูล) — ใส่ค่า Supabase ใน <b>config.js</b> เพื่อบันทึกถาวร'; }
+}
+
+/* ---------------- scoring ---------------- */
+function band(v, table){ for(const [th,pts] of table){ if(v>=th) return pts; } return table[table.length-1][1]; }
+function score(p){
+  const margin = p.price>0 ? (p.price-p.cost)/p.price*100 : 0;
+  const momentum = band(p.trend, [[100,25],[50,21],[30,17],[15,12],[0,7],[-9999,2]]);
+  const creators = p.creators<=15?20 : p.creators<=50?15 : p.creators<=150?10 : p.creators<=500?5 : 2;
+  const cflags = (p.f.wow?1:0)+(p.f.demo?1:0)+(p.f.problem?1:0)+(p.f.easy?1:0);
+  const content = cflags*5;
+  const priceP = (p.price>=150&&p.price<=600)?7 : ((p.price>=100&&p.price<150)||(p.price>600&&p.price<=900))?5 : ((p.price>=60&&p.price<100)||(p.price>900&&p.price<=1500))?3 : 1;
+  const marginP = margin>=50?8 : margin>=40?6 : margin>=30?4 : margin>=20?2 : 0;
+  const marginScore = priceP+marginP;
+  const revP = p.reviews>=1000?6 : p.reviews>=300?5 : p.reviews>=100?4 : p.reviews>=30?3 : p.reviews>=10?2 : 1;
+  const ratP = p.rating>=4.8?4 : p.rating>=4.5?3 : p.rating>=4.0?2 : 1;
+  const demand = revP+ratP;
+  const competition = p.shops<=20?10 : p.shops<=80?7 : p.shops<=300?4 : 2;
+  const total = momentum+creators+content+marginScore+demand+competition;
+  return {total, margin, cflags, dims:[
+    {name:"โมเมนตัมยอดขาย", v:momentum, max:25},
+    {name:"ครีเอเตอร์ยังน้อย", v:creators, max:20},
+    {name:"ทำคอนเทนต์ปังง่าย", v:content, max:20},
+    {name:"มาร์จิ้น & ราคา", v:marginScore, max:15},
+    {name:"หลักฐานดีมานด์", v:demand, max:10},
+    {name:"คู่แข่งไม่แน่น", v:competition, max:10},
+  ]};
+}
+function tier(t){
+  if(t>=80) return {key:"go",label:"ลุยเลย",cls:"t-go"};
+  if(t>=65) return {key:"watch",label:"น่าสนใจ",cls:"t-watch"};
+  if(t>=50) return {key:"mid",label:"กลาง ๆ",cls:"t-mid"};
+  return {key:"skip",label:"ผ่าน",cls:"t-skip"};
+}
+function verdictText(p,s){
+  const tr=tier(s.total).key, low=p.creators<=20, hot=p.trend>=100;
+  if(tr==="go")   return hot&&low ? "จังหวะทองเลย — ยอดกำลังพุ่งแต่คนทำยังน้อยมาก รีบทำคอนเทนต์วันนี้ก่อนตลาดแน่น" : "สัญญาณดีครบ ทั้งดีมานด์และช่องว่างคอนเทนต์ ลุยได้เลย";
+  if(tr==="watch")return "มีของ น่าลองทำ 1–2 คลิปทดสอบ ถ้าเอนเกจดีค่อยอัดหนัก";
+  if(tr==="mid")  return p.creators>150 ? "ดีมานด์มีจริง แต่คนทำเยอะแล้ว ต้องหามุมใหม่ให้ต่างถึงจะแทรกได้" : "ก้ำกึ่ง รอสัญญาณโตชัดกว่านี้ หรือเก็บไว้เป็นตัวสำรอง";
+  return "ยังไม่คุ้มโฟกัส — ตลาดแน่นไปแล้วหรือดีมานด์ยังไม่พอ ข้ามไปหาตัวอื่นก่อน";
+}
+function angles(p){
+  const a=[];
+  if(p.f.problem) a.push('เปิดด้วยปัญหาที่ลูกค้าเจอจริง แล้วโชว์ของแก้ปัญหาใน 15 วิแรก');
+  if(p.f.wow)     a.push('ฮุก 3 วิแรกด้วยภาพผลลัพธ์ “ว้าว” ก่อน ค่อยเฉลยว่าใช้ตัวนี้');
+  if(p.f.demo)    a.push('คลิปเดโมใช้งานจริง โชว์ before / after ให้เห็นชัด ๆ');
+  if(p.f.easy)    a.push('ถ่ายมือถือช็อตเดียว รีวิวแบบติดมือ ไม่ต้องเซ็ตสตูดิโอ');
+  const byCat={"ความงาม":"สาย GRWM / รีวิวผิวจริง 7 วันเห็นผล","สุขภาพ":"เล่าเป็นของดูแลตัวเองหลังเลิกงาน สายรักสุขภาพ","แม่และเด็ก":"มุมคุณแม่มือใหม่ — ปัญหาลูก + วิธีแก้แบบเรียลใจ","ของใช้ในบ้าน":"มุมแต่งห้อง/จัดโต๊ะ aesthetic + ของมันต้องมี","ครัว":"คลิปทำเมนูง่าย ๆ โชว์ความไวความสะดวก","สัตว์เลี้ยง":"มุมทาสหมาทาสแมว คลิปรีแอ็กชันน้อง ๆ","แกดเจ็ต":"สาย life hack / ของบนโต๊ะทำงานสายมินิมอล","แฟชั่น":"คลิปแมตช์ลุค / โชว์ดีเทลใกล้ ๆ"};
+  if(byCat[p.cat]) a.push(byCat[p.cat]);
+  return a.slice(0,3);
+}
+function risks(p,s){
+  const r=[];
+  if(s.margin<35) r.push('กำไรต่อชิ้นบาง — ระวังต้นทุนค่าแอด/ค่าคอมกินกำไร');
+  if(p.creators>150) r.push('เริ่มมีคนทำเยอะ ต้องหามุมใหม่ให้ต่างถึงจะเด่น');
+  if(p.shops>250) r.push('ร้านขายเยอะ เลี่ยงแข่งราคาล้วน ๆ เน้นชนะที่คอนเทนต์');
+  if(p.trend<20) r.push('โมเมนตัมเริ่มแผ่ว รอดูอีก 1 สัปดาห์ก่อนอัดสต๊อกหนัก');
+  if(p.reviews<50) r.push('รีวิวยังน้อย ของอาจใหม่มาก — สั่งตัวอย่างมาลองก่อนสต๊อกเยอะ');
+  if(p.rating<4.5) r.push('เรทติ้งไม่สูง เช็กรีวิวลบว่าติดปัญหาอะไร กันลูกค้าคืนของ');
+  if(!r.length) r.push('ความเสี่ยงต่ำ — แต่รีบทำก่อนคนอื่นเห็นแล้วตลาดแน่น');
+  return r;
+}
+const ringColor={go:"var(--emerald)",watch:"var(--teal)",mid:"var(--amber)",skip:"var(--grey)"};
+
+/* ---------------- render ---------------- */
+let FILTER="all";
+function ranked(){ return P.map(p=>({p,s:score(p)})).sort((a,b)=>b.s.total-a.s.total); }
+function fmt(n){ return Number(n).toLocaleString('en-US'); }
+function renderHome(){
+  const r=ranked();
+  document.getElementById('stat-total').textContent=P.length;
+  document.getElementById('stat-go').textContent=r.filter(x=>x.s.total>=80).length;
+  document.getElementById('stat-top').textContent=r.length?r[0].s.total:'—';
+}
+function renderFilters(){
+  const defs=[["all","ทั้งหมด"],["go","ลุยเลย"],["watch","น่าสนใจ"],["mid","กลาง ๆ"]];
+  document.getElementById('filters').innerHTML=defs.map(([k,l])=>`<button class="chip ${FILTER===k?'on':''}" data-f="${k}">${l}</button>`).join('');
+  document.querySelectorAll('#filters .chip').forEach(c=>c.onclick=()=>{FILTER=c.dataset.f;renderFilters();renderList();});
+}
+function renderList(){
+  let r=ranked();
+  if(FILTER!=="all") r=r.filter(x=>tier(x.s.total).key===FILTER);
+  const el=document.getElementById('list');
+  if(!r.length){ el.innerHTML=`<p style="color:var(--ink-soft);padding:30px 6px;text-align:center">ยังไม่มีสินค้าในกลุ่มนี้</p>`; return; }
+  el.innerHTML=r.map((x,i)=>{
+    const {p,s}=x, t=tier(s.total), rank=i+1;
+    const tags=[];
+    if(p.trend>=80) tags.push(`<span class="tag">🔥 โต ${p.trend}%</span>`);
+    if(p.creators<=25) tags.push(`<span class="tag">👥 คนทำน้อย (${p.creators})</span>`);
+    if(s.cflags>=4) tags.push(`<span class="tag">🎬 คอนเทนต์ปังง่าย</span>`);
+    if(p.shops>250) tags.push(`<span class="tag warn">⚔️ คู่แข่งเยอะ</span>`);
+    if(p.trend<20) tags.push(`<span class="tag warn">📉 โมเมนตัมแผ่ว</span>`);
+    const isTop = FILTER==="all" && i===0;
+    return `${isTop?'<div class="toppick-tag">🏆 ตัวท็อปวันนี้ — โอกาสดีที่สุด</div>':''}
+    <div class="card ${isTop?'hero-card':''}" data-id="${p.id}">
+      <span class="rank">${rank}</span><div class="thumb">${p.emoji}</div>
+      <div class="card-body"><div class="card-name">${p.name}</div><div class="card-cat">${p.cat} · ฿${fmt(p.price)}</div><div class="tags">${tags.slice(0,3).join('')}</div></div>
+      <div class="score-wrap"><div class="score-num ${t.cls}">${s.total}</div><div class="score-max">/ 100</div><span class="tierbadge ${t.cls}">${t.label}</span></div>
+    </div>`;
+  }).join('');
+  el.querySelectorAll('.card').forEach(c=>c.onclick=()=>openDetail(c.dataset.id));
+}
+function openDetail(id){
+  const p=P.find(x=>String(x.id)===String(id)); if(!p) return;
+  const s=score(p), t=tier(s.total);
+  const ring=`conic-gradient(${ringColor[t.key]} ${s.total*3.6}deg, #EAE8DF 0deg)`;
+  const dims=s.dims.map(d=>`<div class="dim"><span class="dim-name">${d.name}</span><span class="dim-val">${d.v}/${d.max}</span><div class="bar"><i style="width:${Math.round(d.v/d.max*100)}%"></i></div></div>`).join('');
+  const trendCls=p.trend>=0?'up':'down', trendSign=p.trend>=0?'▲':'▼';
+  const stats=`
+    <div class="stat"><div class="sl">ยอดขาย 7 วัน</div><div class="sv">${fmt(p.sales)} <small>ชิ้น</small></div></div>
+    <div class="stat"><div class="sl">โต WoW</div><div class="sv ${trendCls}">${trendSign} ${Math.abs(p.trend)}%</div></div>
+    <div class="stat"><div class="sl">ครีเอเตอร์</div><div class="sv">${fmt(p.creators)} <small>คน</small></div></div>
+    <div class="stat"><div class="sl">ร้านที่ขาย</div><div class="sv">${fmt(p.shops)} <small>ร้าน</small></div></div>
+    <div class="stat"><div class="sl">มาร์จิ้น</div><div class="sv">${Math.round(s.margin)}% <small>฿${fmt(p.price-p.cost)}/ชิ้น</small></div></div>
+    <div class="stat"><div class="sl">รีวิว / เรทติ้ง</div><div class="sv">${p.rating} <small>★ · ${fmt(p.reviews)}</small></div></div>`;
+  const ang=angles(p).map(a=>`<div class="list-item"><span class="li-ic a">🎬</span><span>${a}</span></div>`).join('');
+  const rsk=risks(p,s).map(a=>`<div class="list-item"><span class="li-ic r">⚠️</span><span>${a}</span></div>`).join('');
+  document.getElementById('detail').innerHTML=`
+    <div class="d-head"><div class="d-thumb">${p.emoji}</div><div><div class="d-name">${p.name}</div><div class="d-cat">${p.cat}${p.days?` · ลงขายมา ${p.days} วัน`:''}</div></div></div>
+    <div class="verdict"><div class="ring" style="background:${ring}"><span class="rv" style="color:${ringColor[t.key]}">${s.total}</span></div>
+      <div class="verdict-txt"><div class="vt" style="color:${ringColor[t.key]}">${t.label} · ${s.total}/100</div><div class="vd">${verdictText(p,s)}</div></div></div>
+    <div class="sec-label">คะแนนแยกรายด้าน</div><div class="dims">${dims}</div>
+    <div class="sec-label">ตัวเลขสำคัญ</div><div class="grid2">${stats}</div>
+    <div class="sec-label">มุมคอนเทนต์แนะนำ</div>${ang}
+    <div class="sec-label">ต้องระวัง</div>${rsk}
+    <button class="cta ghost" onclick="go('results')" style="margin-top:26px">← กลับไปดูอันดับ</button>`;
+  go('detail');
+}
+
+/* ---------------- add product ---------------- */
+document.getElementById('flags').addEventListener('change',e=>{
+  const l=e.target.closest('.flag'); if(l) l.classList.toggle('checked',e.target.checked);
+});
+document.getElementById('addForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const f=e.target, g=n=>f.elements[n], btn=document.getElementById('addBtn');
+  const p={ id:"local-"+Date.now(), emoji:(g('emoji').value||'🛍️').trim(), name:g('name').value.trim(), cat:g('cat').value,
+    price:+g('price').value, cost:+g('cost').value, sales:+g('sales').value, trend:+g('trend').value,
+    creators:+g('creators').value, shops:+g('shops').value, reviews:+g('reviews').value, rating:+g('rating').value, days:0,
+    f:{wow:g('wow').checked?1:0, demo:g('demo').checked?1:0, problem:g('problem').checked?1:0, easy:g('easy').checked?1:0} };
+  if(HAS_DB){
+    btn.disabled=true; btn.textContent="กำลังบันทึก…";
+    try{
+      const {data,error}=await sb.from("products").insert(toRow(p)).select().single();
+      if(error) throw error;
+      p.id=data.id;
+      // ถ้าเดิมโชว์ seed อยู่ ให้ล้างแล้วเริ่มจาก DB จริง
+      if(P.length && String(P[0].id).startsWith("s")) P=[];
+      toast("บันทึกลงฐานข้อมูลแล้ว ☁️");
+    }catch(err){ console.warn(err); toast("บันทึกออนไลน์ไม่ได้ — เก็บชั่วคราวในเครื่อง"); }
+    btn.disabled=false; btn.textContent="⚡ ให้คะแนน & บันทึก";
+  }else{
+    toast("ให้คะแนนแล้ว (โหมดตัวอย่าง ยังไม่บันทึกถาวร)");
+  }
+  P.push(p);
+  f.reset(); document.querySelectorAll('.flag').forEach(x=>x.classList.remove('checked'));
+  renderHome(); openDetail(p.id);
+});
+
+/* ---------------- toast + nav ---------------- */
+let toastT;
+function toast(msg){
+  const el=document.getElementById('toast'); el.textContent=msg; el.classList.add('show');
+  clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove('show'),2600);
+}
+function go(name){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('s-'+name).classList.add('active');
+  if(name==='results'){ renderFilters(); renderList(); }
+  window.scrollTo({top:0,behavior:'instant'});
+}
+window.go=go;
+
+/* ---------------- init ---------------- */
+(function(){
+  const d=new Date(), th=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  document.getElementById('today').textContent=`${d.getDate()} ${th[d.getMonth()]} ${d.getFullYear()+543}`;
+  renderHome();
+  loadData();
+})();
