@@ -5,22 +5,8 @@ const CFG = window.__CONFIG__ || {};
 const HAS_DB = !!(CFG.SUPABASE_URL && CFG.SUPABASE_ANON_KEY);
 const sb = HAS_DB ? createClient(CFG.SUPABASE_URL, CFG.SUPABASE_ANON_KEY) : null;
 
-/* ---------------- seed (ใช้เมื่อยังไม่ต่อ DB หรือตารางว่าง) ---------------- */
-const SEED = [
-  {id:"s1", emoji:"👁️", name:"เครื่องนวดตาไฟฟ้าพกพา", cat:"สุขภาพ", price:390, cost:150, sales:420, trend:145, creators:12, shops:34, reviews:210, rating:4.7, days:22, live:0, f:{wow:1,demo:1,problem:1,easy:1}},
-  {id:"s2", emoji:"👃", name:"ที่ดูดน้ำมูกเด็กไฟฟ้า", cat:"แม่และเด็ก", price:290, cost:95, sales:260, trend:95, creators:20, shops:45, reviews:130, rating:4.8, days:18, live:5, f:{wow:0,demo:1,problem:1,easy:1}},
-  {id:"s3", emoji:"🌇", name:"โคมไฟพระอาทิตย์ตั้งโต๊ะ", cat:"ของใช้ในบ้าน", price:220, cost:70, sales:800, trend:20, creators:480, shops:520, reviews:2100, rating:4.6, days:120, live:45, f:{wow:1,demo:1,problem:0,easy:1}},
-  {id:"s4", emoji:"🪥", name:"แปรงสีฟันไฟฟ้าเด็กลายการ์ตูน", cat:"สุขภาพ", price:180, cost:60, sales:150, trend:60, creators:40, shops:90, reviews:85, rating:4.7, days:30, live:20, f:{wow:0,demo:1,problem:1,easy:1}},
-  {id:"s5", emoji:"🧼", name:"เครื่องตีโฟมล้างหน้าอัตโนมัติ", cat:"ความงาม", price:260, cost:80, sales:340, trend:110, creators:28, shops:60, reviews:160, rating:4.6, days:20, live:15, f:{wow:1,demo:1,problem:0,easy:1}},
-  {id:"s6", emoji:"🔌", name:"คลิปหนีบสายไฟแม่เหล็กติดโต๊ะ", cat:"แกดเจ็ต", price:120, cost:35, sales:90, trend:25, creators:60, shops:140, reviews:70, rating:4.5, days:40, live:0, f:{wow:0,demo:1,problem:0,easy:1}},
-  {id:"s7", emoji:"💆", name:"หวีนวดหนังศีรษะไฟฟ้า", cat:"ความงาม", price:350, cost:120, sales:300, trend:130, creators:18, shops:40, reviews:140, rating:4.7, days:16, live:10, f:{wow:1,demo:1,problem:1,easy:1}},
-  {id:"s8", emoji:"🍶", name:"กระบอกน้ำมีจอวัดอุณหภูมิ LED", cat:"แกดเจ็ต", price:320, cost:110, sales:500, trend:40, creators:220, shops:300, reviews:900, rating:4.6, days:80, live:40, f:{wow:1,demo:0,problem:0,easy:1}},
-  {id:"s9", emoji:"🦟", name:"เครื่องดักยุงไฟฟ้า USB เงียบ", cat:"ของใช้ในบ้าน", price:450, cost:160, sales:380, trend:150, creators:25, shops:55, reviews:175, rating:4.5, days:20, live:0, f:{wow:1,demo:1,problem:1,easy:1}},
-  {id:"s10", emoji:"👀", name:"แผ่นแปะลดบวมใต้ตา (30 คู่)", cat:"ความงาม", price:150, cost:45, sales:260, trend:55, creators:90, shops:180, reviews:400, rating:4.4, days:50, live:30, f:{wow:0,demo:1,problem:1,easy:1}},
-  {id:"s11", emoji:"🥤", name:"เครื่องปั่นพกพาไร้สาย", cat:"ครัว", price:480, cost:180, sales:210, trend:35, creators:350, shops:400, reviews:1500, rating:4.5, days:150, live:55, f:{wow:1,demo:1,problem:0,easy:1}},
-  {id:"s12", emoji:"🐾", name:"ที่กรอเล็บสุนัขไฟฟ้าเงียบ", cat:"สัตว์เลี้ยง", price:340, cost:110, sales:180, trend:120, creators:15, shops:30, reviews:95, rating:4.7, days:17, live:0, f:{wow:0,demo:1,problem:1,easy:1}},
-];
-let P = SEED.slice();
+/* สินค้าจริงเท่านั้น — เก็บจาก Chrome extension หรือกรอกเอง (ไม่มีข้อมูลตัวอย่าง/mockup) */
+let P = [];
 
 /* map a Supabase row -> internal product shape */
 function fromRow(r){
@@ -45,23 +31,22 @@ function liveStatus(p){
 }
 
 async function loadData(){
-  if(!HAS_DB){ setDataNote(false, "offline"); return; }
+  if(!HAS_DB){ setDataNote(false); return; }
   try{
     const {data, error} = await sb.from("products").select("*").order("created_at",{ascending:true});
     if(error) throw error;
-    if(data && data.length){ P = data.map(fromRow); setDataNote(true, "live"); }
-    else { P = SEED.slice(); setDataNote(true, "empty"); }
+    P = (data||[]).map(fromRow);   // ข้อมูลจริงเท่านั้น
+    setDataNote(true);
   }catch(e){
-    console.warn("Supabase load failed, ใช้ข้อมูลตัวอย่างแทน:", e.message);
-    P = SEED.slice(); setDataNote(false, "error");
+    console.warn("Supabase load failed:", e.message);
+    P = []; setDataNote(false);
   }
   renderHome();
 }
-function setDataNote(live, mode){
+function setDataNote(ok){
   const note=document.getElementById("dataNote"), txt=document.getElementById("dataNoteTxt");
-  if(live && mode==="live"){ note.classList.add("live"); txt.innerHTML='☁️ <b>เชื่อมต่อฐานข้อมูลแล้ว</b> — สินค้าที่เพิ่มจะถูกบันทึกถาวร ใช้ได้ทุกเครื่อง'; }
-  else if(live && mode==="empty"){ note.classList.add("live"); txt.innerHTML='☁️ <b>ฐานข้อมูลพร้อม (ยังว่างอยู่)</b> — ตอนนี้โชว์ข้อมูลตัวอย่าง ลองกด “เพิ่มสินค้าของฉัน” เพื่อเริ่มบันทึกจริง'; }
-  else { txt.innerHTML='💡 ตอนนี้ใช้ <b>ข้อมูลตัวอย่าง</b> (ยังไม่ได้ต่อฐานข้อมูล) — ใส่ค่า Supabase ใน <b>config.js</b> เพื่อบันทึกถาวร'; }
+  if(ok){ note.classList.add("live"); txt.innerHTML='☁️ <b>ข้อมูลจริงเท่านั้น</b> — “สินค้ามาแรง” ดึงสดจาก YouTube · เรดาร์สินค้าเก็บจาก extension/ที่คุณกรอกเอง'; }
+  else { txt.innerHTML='⚠️ ต่อฐานข้อมูลไม่ได้ — ลองรีเฟรชอีกครั้ง'; }
 }
 
 /* ---------------- scoring ---------------- */
@@ -129,11 +114,17 @@ const ringColor={go:"var(--emerald)",watch:"var(--teal)",mid:"var(--amber)",skip
 let FILTER="all", LIVE="all";
 function ranked(){ return P.map(p=>({p,s:score(p)})).sort((a,b)=>b.s.total-a.s.total); }
 function fmt(n){ return Number(n).toLocaleString('en-US'); }
-function renderHome(){
-  const r=ranked();
-  document.getElementById('stat-total').textContent=P.length;
-  document.getElementById('stat-go').textContent=r.filter(x=>x.s.total>=80).length;
-  document.getElementById('stat-top').textContent=r.length?r[0].s.total:'—';
+async function renderHome(){
+  const st=document.getElementById('stat-total'), sg=document.getElementById('stat-go'), sp=document.getElementById('stat-top');
+  if(!HAS_DB) return;
+  try{
+    const {data}=await sb.from('yt_products').select('views,category');
+    const d=data||[];
+    st.textContent=d.length||'—';
+    sg.textContent=new Set(d.map(x=>x.category)).size||'—';
+    const mx=d.length?Math.max(...d.map(x=>+x.views||0)):0;
+    sp.textContent=mx?Math.round(mx/1000)+'k':'—';
+  }catch(e){ st.textContent=sg.textContent=sp.textContent='—'; }
 }
 function renderFilters(){
   const defs=[["all","ทั้งหมด"],["go","ลุยเลย"],["watch","น่าสนใจ"],["mid","กลาง ๆ"]];
@@ -150,7 +141,11 @@ function renderList(){
   if(FILTER!=="all") r=r.filter(x=>tier(x.s.total).key===FILTER);
   if(LIVE!=="all") r=r.filter(x=>LIVE==="in"? liveStatus(x.p).inLive : !liveStatus(x.p).inLive);
   const el=document.getElementById('list');
-  if(!r.length){ el.innerHTML=`<p style="color:var(--ink-soft);padding:30px 6px;text-align:center">ยังไม่มีสินค้าในกลุ่มนี้</p>`; return; }
+  if(!r.length){
+    const msg = P.length ? 'ยังไม่มีสินค้าในกลุ่มนี้'
+      : 'ยังไม่มีสินค้าที่เก็บไว้<br><br>เก็บสินค้าจริงได้ 2 ทาง:<br>• ใช้ Chrome extension เก็บจาก Shopee<br>• กด “➕ เพิ่มสินค้าเอง”<br><br>หรือดู <b>🔥 สินค้ามาแรง</b> ที่หน้าแรก (ดึงสดจาก YouTube)';
+    el.innerHTML=`<p style="color:var(--ink-soft);padding:26px 14px;text-align:center;line-height:1.75">${msg}</p>`; return;
+  }
   el.innerHTML=r.map((x,i)=>{
     const {p,s}=x, t=tier(s.total), rank=i+1, ls=liveStatus(p);
     const tags=[];
@@ -229,8 +224,6 @@ document.getElementById('addForm').addEventListener('submit', async (e)=>{
       const {data,error}=await sb.from("products").insert(toRow(p)).select().single();
       if(error) throw error;
       p.id=data.id;
-      // ถ้าเดิมโชว์ seed อยู่ ให้ล้างแล้วเริ่มจาก DB จริง
-      if(P.length && String(P[0].id).startsWith("s")) P=[];
       toast("บันทึกลงฐานข้อมูลแล้ว ☁️");
     }catch(err){ console.warn(err); toast("บันทึกออนไลน์ไม่ได้ — เก็บชั่วคราวในเครื่อง"); }
     btn.disabled=false; btn.textContent="⚡ ให้คะแนน & บันทึก";
