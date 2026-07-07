@@ -254,6 +254,12 @@ async function loadTrends(){
       const a=ANGLE[t.category]||ANGLE["กระแสสังคม"];
       const vol=t.volume?`🔍 ${Number(t.volume).toLocaleString('en-US')}+`:'';
       const news=t.news_title?`<div class="tr-news"><b>${t.news_source||''}:</b> ${t.news_title}</div>`:'';
+      const q=encodeURIComponent(t.title);
+      const links=`<div class="tr-links">
+        <a class="shopee" href="https://shopee.co.th/search?keyword=${q}" target="_blank" rel="noopener">🛒 หาสินค้าใน Shopee</a>
+        <a href="https://www.lazada.co.th/catalog/?q=${q}" target="_blank" rel="noopener">🛍️ Lazada</a>
+        <a href="https://www.tiktok.com/search?q=${q}" target="_blank" rel="noopener">▶️ TikTok</a>
+      </div>`;
       return `<div class="trend">
         <div class="tr-rank">${i+1}</div>
         <div class="tr-body">
@@ -261,6 +267,7 @@ async function loadTrends(){
           <span class="tr-cat ${a.prod?'prod':''}">${a.ic} ${t.category}</span>
           ${news}
           <div class="tr-angle ${a.prod?'prod':''}"><span>${a.ic}</span><span>${a.txt}</span></div>
+          ${links}
         </div>
       </div>`;
     }).join('');
