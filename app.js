@@ -242,6 +242,41 @@ document.getElementById('addForm').addEventListener('submit', async (e)=>{
   renderHome(); openDetail(p.id);
 });
 
+/* ---------------- สินค้ามาแรงจาก YouTube ---------------- */
+function ytClean(t){
+  let s=(t||'').split(/[—\|｜]/)[0];
+  s=s.replace(/#\S+/g,'').replace(/รีวิว|แกะกล่อง|unbox(ing)?|review|พาส่อง/gi,'').replace(/[!?]/g,'').trim();
+  return (s||t||'').slice(0,50);
+}
+async function loadHot(){
+  const el=document.getElementById('hot-list'), sub=document.getElementById('hot-sub');
+  if(!HAS_DB){ sub.textContent="ต้องต่อฐานข้อมูลก่อน"; return; }
+  el.innerHTML=`<p style="color:var(--ink-soft);padding:24px 6px;text-align:center">กำลังโหลด…</p>`;
+  try{
+    const {data,error}=await sb.from('yt_products').select('*').order('views',{ascending:false}).limit(30);
+    if(error) throw error;
+    if(!data||!data.length){ sub.textContent="ยังไม่มีข้อมูล (cron ดึงให้ทุกวัน)"; el.innerHTML=''; return; }
+    sub.textContent=`${data.length} สินค้าที่คนไทยกำลังดู/รีวิว · เรียงตามยอดวิว`;
+    el.innerHTML=data.map((p,i)=>{
+      const q=encodeURIComponent(ytClean(p.title));
+      const views=Number(p.views).toLocaleString('en-US');
+      return `<div class="hot" style="position:relative">
+        <span class="hot-rank">${i+1}</span>
+        <img class="hot-thumb" src="${p.thumbnail||''}" loading="lazy" alt="">
+        <div class="hot-body">
+          <div class="hot-title">${p.title}</div>
+          <div class="hot-meta">${p.channel||''} · <span class="v">👁️ ${views} วิว</span></div>
+          <span class="hot-cat">${p.category}</span>
+          <div class="tr-links">
+            <a class="shopee" href="https://shopee.co.th/search?keyword=${q}" target="_blank" rel="noopener">🛒 หาใน Shopee</a>
+            <a href="https://www.youtube.com/watch?v=${p.video_id}" target="_blank" rel="noopener">▶️ ดูคลิป</a>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  }catch(e){ console.warn(e); sub.textContent="โหลดไม่ได้: "+e.message; el.innerHTML=''; }
+}
+
 /* ---------------- trends (เรดาร์เทรนด์ไทย) ---------------- */
 const ANGLE = {
   "หวย / ดวง":        {ic:"🔮", prod:false, txt:"สายมู/เลขเด็ด — ทำคลิปตีความ หรือขายของมงคล/เครื่องรางที่เกี่ยว จับจังหวะก่อนหวยออก"},
@@ -296,6 +331,7 @@ function go(name){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById('s-'+name).classList.add('active');
   if(name==='results'){ renderLiveSeg(); renderFilters(); renderList(); }
+  if(name==='hot'){ loadHot(); }
   if(name==='trends'){ loadTrends(); }
   window.scrollTo({top:0,behavior:'instant'});
 }
