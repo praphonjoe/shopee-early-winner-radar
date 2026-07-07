@@ -245,8 +245,9 @@ document.getElementById('addForm').addEventListener('submit', async (e)=>{
 /* ---------------- สินค้ามาแรงจาก YouTube ---------------- */
 function ytClean(t){
   let s=(t||'').split(/[—\|｜]/)[0];
-  s=s.replace(/#\S+/g,'').replace(/รีวิว|แกะกล่อง|unbox(ing)?|review|พาส่อง/gi,'').replace(/[!?]/g,'').trim();
-  return (s||t||'').slice(0,50);
+  s=s.replace(/#\S+/g,'').replace(/รีวิว|แกะกล่อง|unbox(ing)?|review|พาส่อง/gi,'').replace(/[!?]/g,'');
+  s=s.replace(/[\uD800-\uDFFF]/g,'').trim();        // ตัด emoji/surrogate กันพัง encodeURIComponent
+  return Array.from(s).slice(0,50).join('') || 'สินค้า';
 }
 async function loadHot(){
   const el=document.getElementById('hot-list'), sub=document.getElementById('hot-sub');
