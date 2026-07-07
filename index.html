@@ -161,6 +161,8 @@
   .hot-meta{font-size:11px;color:var(--ink-soft);margin-top:4px}
   .hot-meta .v{color:var(--emerald-deep);font-weight:800}
   .hot-cat{display:inline-block;font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px;background:#EEF4EA;color:var(--emerald-deep);margin-top:6px}
+  .hotbadge{display:inline-block;font-size:10px;font-weight:800;padding:2px 7px;border-radius:6px;background:#DFF3D6;color:var(--emerald-deep);margin-right:6px}
+  .hot-meta .v{color:var(--emerald-deep);font-weight:800}
   .hot-rank{position:absolute;top:-6px;left:-6px;width:22px;height:22px;border-radius:50%;background:var(--ink);color:#F4FBEF;font-size:11px;font-weight:800;display:grid;place-items:center;z-index:2}
   .qgroup{margin-bottom:18px}
   .qgroup h3{font-size:14px;font-weight:800;color:var(--emerald-deep);margin-bottom:9px;display:flex;align-items:center;gap:6px}
@@ -205,7 +207,7 @@
       <span class="kicker"><span class="dot-live"></span> เรดาร์กำลังสแกน</span>
       <h1 class="title">วันนี้ทำ<br><span class="hl">สินค้าอะไรดี?</span></h1>
       <p class="lead">จับสินค้า “ก่อนกระแส” ที่กำลังจะปัง — ยอดโต คนทำยังน้อย ทำคอนเทนต์ง่ายไม่แบน กดปุ่มเดียวจัดอันดับให้เลย</p>
-      <button class="cta" onclick="go('hot')">🔥 สินค้ามาแรงจริงในไทย <span class="arrow">→</span></button>
+      <button class="cta" onclick="go('hot')">🚀 สินค้าก่อนกระแส (ใหม่+พุ่งเร็ว) <span class="arrow">→</span></button>
       <button class="cta ghost" onclick="go('searches')">🔎 คนไทยกำลังค้นหาซื้ออะไร</button>
       <button class="cta ghost" onclick="go('results')">🎯 เรดาร์สินค้า + ให้คะแนน</button>
       <button class="cta ghost" onclick="go('add')">➕ เพิ่มสินค้าเอง</button>
@@ -234,7 +236,7 @@
 
   <section class="screen" id="s-hot">
     <button class="back" onclick="goBack()">← กลับ</button>
-    <div class="screen-head"><h2>สินค้ามาแรงจริงในไทย</h2><p id="hot-sub">กำลังโหลด…</p></div>
+    <div class="screen-head"><h2>สินค้าก่อนกระแส</h2><p id="hot-sub">กำลังโหลด…</p></div>
     <div id="hot-list"></div>
   </section>
 

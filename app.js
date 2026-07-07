@@ -292,19 +292,22 @@ async function loadHot(){
   if(!HAS_DB){ sub.textContent="ต้องต่อฐานข้อมูลก่อน"; return; }
   el.innerHTML=`<p style="color:var(--ink-soft);padding:24px 6px;text-align:center">กำลังโหลด…</p>`;
   try{
-    const {data,error}=await sb.from('yt_products').select('*').order('views',{ascending:false}).limit(30);
+    const {data,error}=await sb.from('yt_products').select('*').order('velocity',{ascending:false}).limit(30);
     if(error) throw error;
     if(!data||!data.length){ sub.textContent="ยังไม่มีข้อมูล (cron ดึงให้ทุกวัน)"; el.innerHTML=''; return; }
-    sub.textContent=`${data.length} สินค้าที่คนไทยกำลังดู/รีวิว · เรียงตามยอดวิว`;
+    sub.textContent=`${data.length} สินค้าใหม่ที่คลิปรีวิวกำลังพุ่ง · เรียงตามความเร็ว (วิว/วัน) = ก่อนกระแส`;
     el.innerHTML=data.map((p,i)=>{
       const q=encodeURIComponent(ytClean(p.title));
-      const views=Number(p.views).toLocaleString('en-US');
+      const vel=Number(p.velocity||0).toLocaleString('en-US');
+      const days=p.published_at?Math.max(0,Math.round((Date.now()-new Date(p.published_at).getTime())/86400000)):null;
+      const hot=(days!=null&&days<=10&&(p.velocity||0)>=2000);
+      const badge=hot?`<span class="hotbadge">🚀 ก่อนกระแส</span>`:'';
       return `<div class="hot" style="position:relative">
         <span class="hot-rank">${i+1}</span>
         <img class="hot-thumb" src="${p.thumbnail||''}" loading="lazy" alt="">
         <div class="hot-body">
           <div class="hot-title">${p.title}</div>
-          <div class="hot-meta">${p.channel||''} · <span class="v">👁️ ${views} วิว</span></div>
+          <div class="hot-meta">${badge}<span class="v">🚀 ${vel} วิว/วัน</span>${days!=null?` · 🆕 ${days} วันก่อน`:''}</div>
           <span class="hot-cat">${p.category}</span>
           <div class="tr-links">
             <a class="shopee" href="https://shopee.co.th/search?keyword=${q}" target="_blank" rel="noopener">🛒 หาใน Shopee</a>
