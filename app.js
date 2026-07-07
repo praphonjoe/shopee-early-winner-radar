@@ -273,14 +273,12 @@ async function loadHot(){
 
 /* ---------------- trends (เรดาร์เทรนด์ไทย) ---------------- */
 const ANGLE = {
-  "หวย / ดวง":        {ic:"🔮", prod:false, txt:"สายมู/เลขเด็ด — ทำคลิปตีความ หรือขายของมงคล/เครื่องรางที่เกี่ยว จับจังหวะก่อนหวยออก"},
-  "กีฬา":             {ic:"⚽", prod:false, txt:"คลิปวิเคราะห์/รีแอกชันหลังเกม, ขายเสื้อทีม/ของเชียร์ — ทำให้ทันช่วงกระแสร้อน"},
-  "การเมือง / ข่าว":  {ic:"⚠️", prod:false, txt:"หัวข้ออ่อนไหว — เน้นสรุปข่าว/ให้ข้อมูล ไม่ควรขายของตรงๆ ระวังดราม่า"},
-  "การเงิน":          {ic:"📈", prod:false, txt:"คอนเทนต์ให้ความรู้/เตือนภัย สร้างความน่าเชื่อถือ ต่อยอดเป็นที่ปรึกษา"},
-  "บันเทิง / ดารา":   {ic:"🎬", prod:false, txt:"รีแอกชัน/รีวิว, ตามสไตล์ดารา, ขายสินค้าที่คนดังใช้ — แรงช่วงกระแสพีค"},
-  "ไลฟ์สไตล์ / สินค้า":{ic:"🎯", prod:true,  txt:"โอกาสขายของ! หาสินค้าที่เกี่ยวมาทำรีวิว/คอนเทนต์เลย — นี่คือเทรนด์ที่ปั้นยอดขายได้"},
-  "กระแสสังคม":       {ic:"💡", prod:false, txt:"จับโมเมนต์ทำคอนเทนต์ให้ทัน — เล่นกับกระแสก่อนมันจาง คนกำลังสนใจสูงสุด"},
+  "เทคโนโลยี/แกดเจ็ต":{ic:"📱", prod:true, txt:"สินค้า/อุปกรณ์เสริมที่เกี่ยวกำลังมา — หาของมาขายหรือทำรีวิวจับกระแส"},
+  "ช้อปปิ้ง":         {ic:"🛒", prod:true, txt:"คนกำลังค้นหาเพื่อซื้อ — โอกาสขายตรง ๆ รีบหาสินค้ามาลง"},
+  "ความงาม/แฟชั่น":   {ic:"💄", prod:true, txt:"สายบิวตี้/แฟชั่นกำลังมา — หาสินค้าที่เกี่ยวมารีวิว/ขาย"},
+  "ยานยนต์":          {ic:"🚗", prod:true, txt:"อุปกรณ์/ของแต่ง/อะไหล่ที่เกี่ยวกำลังเป็นที่สนใจ"},
 };
+const ANGLE_DEFAULT={ic:"🎯", prod:true, txt:"คนกำลังสนใจ — หาสินค้าที่เกี่ยวมาขาย/ทำคอนเทนต์จับกระแส"};
 async function loadTrends(){
   const el=document.getElementById('trends-list'), sub=document.getElementById('trends-sub');
   if(!HAS_DB){ sub.textContent="ต้องต่อฐานข้อมูลก่อน"; return; }
@@ -292,7 +290,7 @@ async function loadTrends(){
     const d=data[0].trend_date;
     sub.textContent=`อัปเดตล่าสุด ${d} · เรียงตามยอดค้นหา · ${data.length} เทรนด์`;
     el.innerHTML=data.map((t,i)=>{
-      const a=ANGLE[t.category]||ANGLE["กระแสสังคม"];
+      const a=ANGLE[t.category]||ANGLE_DEFAULT;
       const vol=t.volume?`🔍 ${Number(t.volume).toLocaleString('en-US')}+`:'';
       const news=t.news_title?`<div class="tr-news"><b>${t.news_source||''}:</b> ${t.news_title}</div>`:'';
       const q=encodeURIComponent(t.title);
