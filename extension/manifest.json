@@ -1,0 +1,24 @@
+{
+  "manifest_version": 3,
+  "name": "ก่อนกระแส · Shopee → Radar",
+  "version": "1.0.0",
+  "description": "คลิกเดียวดูดข้อมูลสินค้า Shopee (ยอดขาย/รีวิว/ราคา) เข้าแอปก่อนกระแส — ทำงานในเบราว์เซอร์คุณเอง ไม่โดนบล็อก",
+  "host_permissions": [
+    "https://shopee.co.th/*",
+    "https://zovdlmoycqpdvrdgzaqa.supabase.co/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["https://shopee.co.th/*"],
+      "js": ["interceptor.js"],
+      "run_at": "document_start",
+      "world": "MAIN"
+    },
+    {
+      "matches": ["https://shopee.co.th/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle",
+      "world": "ISOLATED"
+    }
+  ]
+}
